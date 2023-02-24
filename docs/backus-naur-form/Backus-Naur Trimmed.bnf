@@ -1,0 +1,338 @@
+# ------------------------ Function definition ------------------------
+
+<translation-unit> ::= <external-definition>
+                     | <translation-unit> <external-definition>
+
+<external-declaration> ::= <function-definition>
+                         | <declaration>
+
+# In other words - Declaration specifiers is type, declarator is name and params, declaration list is x and compound
+# statement is the main body
+<function-definition> ::= <declaration-specifiers> <declarator> {<declaration-list>}? <compound-statement>
+
+# ------------------------ Statements ------------------------
+
+# Block statements
+<compound-statement> ::= { {<block-item-list>}? }
+
+<block-item-list> ::= <block-item>
+                    | <block-item-list> <block-item>
+
+<block-item> ::= <declaration>
+               | <statement>
+
+# Standard expression statement
+<expression-statement> ::= {<expression>}? ;
+
+# Selection statement
+<selection-statement> ::= if ( <expression> ) <statement>
+                        | if ( <expression> ) <statement> else <statement>
+
+# Iteration statements
+<iteration-statement> ::= while ( <expression> ) <statement>
+
+# Jump statements
+<jump-statement> ::= return {<expression>}? ;
+
+# ------------------------ Initialisers ------------------------
+
+<initialiser> ::= <assignment-expression> # An expression to initialise to
+                | { <initialiser-list> } # Used for initialising arrays and structs
+                | { <initialiser-list> , } # The initialiser list with a trailing comma
+
+<initialiser-list> ::= {<designation>}? <initialiser>
+                     | <initialiser-list>, {<designation>}? <initialiser>
+
+<designation> ::= <designator-list> =
+
+<designator-list> ::= <designator> # Single designator
+                    | <designator-list> <designator> # Used for multi-dimensional array, etc
+
+<designator> ::= [ <constant-expression> ] # Value has array type
+               | . <identifier> # Value is a structure or union
+
+# Allows for the initialisation of multiple values of the same type. Eg. int x = 2, y = 3;
+<init-declarator-list> ::= <init-declarator>
+                         | <init-declarator-list> , <init-declarator>
+
+# Describes the standard way to initialise a value
+<init-declarator> ::= <declarator>
+                    | <declarator> = <initialiser>
+
+# ------------------------ Declarations ------------------------
+# Used when referencing an existing variable, etc
+
+# Contains a list of declarators without separators
+<declarator-list> ::= <declaration>
+                    | <declaration-list> <declaration>
+
+# Contains a set of specifiers and the initialiser
+<declaration> ::= <declaration-specifiers> {<init-declarator-list>}? ;
+
+# Creates a set of declaration specifiers
+<declaration-specifiers> ::= <storage-class-specifier> {<declaration-specifiers>}?
+                           | <type-specifier> {<declaration-specifiers>}?
+                           | <type-qualfier> {<declaration-specifiers>}?
+                           | <function-specifier> {<declaration-specifiers>}?
+
+# A decorated name/identifier
+<declarator> ::= {<pointer>}? <direct-declarator>
+
+# Decorates an identifier with the relevant parts
+<direct-declarator> ::= <identifier> # Identifier by itself - base version
+                      | ( <declarator> ) # Is identical to unparenthesised although binding may be altered
+                      | <direct-declarator> [ {<type-qualifier-list>}? {<assignment-expression>}? ] # Array declaration with expression
+                      | <direct-declarator> [ <type-qualifier-list> * ] # Variable-length array - only used within declarations of functions
+                      | <direct-declarator> ( <parameter-type-list> ) # Used for defining functions
+                      | <direct-declarator> ( {<identifier-list>}? ) # 
+
+<pointer> ::= * {<type-qualifier-list>}?
+            | * {<type-qualifier-list>}? <pointer>
+
+<parameter-type-list> ::= <parameter-list> # Used for standard parameter list
+
+# Standard list of parameters
+<parameter-list> ::= <parameter-declaration>
+                   | <parameter-list> , <parameter-declaration>
+
+# Parameters
+<parameter-declaration> ::= <declaration-specifiers> <declarator>
+                          | <declaration-specifiers> {<abstract-declarator>}? # Used for function prototypes
+
+# Declares the variable types without need for an identifier
+<abstract-declarator> ::= <pointer>
+                        | {<pointer>}? <direct-abstract-declarator>
+
+<direct-abstract-declarator> ::= ( <abstract-declarator> )
+                               | <direct-abstract-declarator> [ {<type-qualifier-list>}? {<assignment-expression>}? ] # Array declaration with expression
+                               | <direct-abstract-declarator> [ <type-qualifier-list> * ] # Variable length array - only used within declarations of functions
+                               | <direct-abstract-declarator> ( <parameter-type-list> ) # Used for defining functions
+
+# ------------------------ Type specification ------------------------
+# These specify the actual type
+
+# Specifies the actual types of values
+<type-specifier> ::= void
+                   | char
+                   | int
+                   | long
+                   | double
+                   | signed
+                   | unsigned
+                   | _Bool
+
+<type-qualifier-list> ::= <type-qualifier>
+                        | <type-qualifier-list> <type-qualifier>
+
+# Specifies what to do when setting values
+<type-qualifier> ::= const # Specifies that the thing to the right will not change
+
+# Specifies a type name
+<type-name> ::= <specifier-qualifier-list> {<abstract-declarator>}?
+
+# Combines a set of type qualifiers and type specifiers
+<specifier-qualifier-list> ::= <type-specifier> {<specifier-qualifier-list>}?
+                             | <type-qualifier> {<specifier-qualifier-list>}?
+
+# ------------------------ Expressions ------------------------
+# These are things that return a value
+
+# Can be calculated at compile-time for improved optimisation.
+# Must not contain assignment, increment, decrement, function-call, or comma operators
+<constant-expression> ::= <conditional-expression>
+
+# The base type of expression (excluding comma-expression)
+<expression> ::= <assignment-expression>
+
+# Assigns a value and returns the set value
+# Note: <unary-expression> must be a modifiable lvalue
+<assignment-expression> ::= <conditional-expression>
+                          | <unary-expression> = <assignment-expression>
+                          | <unary-expression> <assignment-operator-shorthand> <assignment-expression>
+
+# Each operator can be converted from 'E1 op E2' to 'E1 = E1 op E2'
+<assignment-operator-shorthand> ::= *=
+                                  | /=
+                                  | %=
+                                  | +=
+                                  | <<=
+                                  | >>=
+                                  | &=
+                                  | ^=
+                                  | |=
+
+# Runs conditional expressions returns <expression> if <logical-or-expression> is true, else <conditional-expression>
+# Note: The way its set prevents the following: true ? 1 : a = 2;
+# Additionally, this will always return a value. It cannot return an lvalue
+<conditional-expression> ::= <logical-or-expression>
+                           | <logical-or-expression> ? <expression> : <conditional-expression>
+
+# Performs logical or on both values
+<logical-or-expression> ::= <logical-and-expression>
+                          | <logical-or-expression> && <logical-and-expression>
+
+# Performs logical and on both values
+<logical-and-expression> ::= <equality-expression>
+                           | <logical-and-expression> && <equality-expression>
+
+# This is equality testing
+<equality-expression> ::= <relational-expression>
+                        | <equality-expression> <equality-operators> <relational-expression>
+
+<equality-operators> ::= == # Tests equality
+                       | != # Tests inequality
+
+# This is basically greater than or less than
+<relational-expression> ::= <additive-expression>
+                          | <relational-expression> <relational-operators> <additive-expression>
+
+<relational-operators> ::= >
+                         | <
+                         | >=
+                         | <=
+
+# These are the additive operators
+<additive-expression> ::= <multiplicative-expression>
+                        | <additive-expression> <additive-operators> <multiplicative-expression>
+
+<additive-operators> ::= +
+                       | -
+
+# Runs multiplicative operations from left to right
+<multiplicative-expression> ::= <cast-expression>
+                              | <multiplicative-expression> <multiplicative-operators> <cast-expression>
+
+<multiplicative-operators> ::= *
+                             | /
+                             | %
+
+<cast-expression> ::= <unary-expression>
+                    | <cast-expression> # Casts the value to the given type
+
+<unary-expression> ::= <postfix-expression>
+                     | ++ <unary-expression> # Increments value and returns incremented lvalue (++E1 = E += 1)
+                     | -- <unary-expression> # Decrements value and returns incremented lvalue (--E1 = E -= 1)
+                     | <unary-operator> <cast-expression> # Runs the various operators on the given expression. Note allows - (int) a
+                     | sizeof ( <type-name> ) # Returns the size in bytes of a type (Note: sizeof(a) where a is a variable is solved
+                                              # by primary-expression)
+
+<unary-operator> ::= & # Gets the reference of the lvalue
+                   | * # Dereferences a given lvalue
+                   | + # Does nothing
+                   | - # Flips the sign of the given value
+                   | ! # Flips a boolean value
+
+<postfix-expression> ::= <primary-expression>
+                       | <postfix-expression> [ <expression> ]  # Access an array element (E1[E2] = *(E1+E2))
+                       | <postfix-expression> ( ) # Evaluate function without params
+                       | <postfix-expression> ( <argument-expression-list> ) # Evaluate function with params
+                       | <postfix-expression> ++ # Increments value but returns original
+                       | <postfix-expression> -- # Decrements value but returns original
+
+<primary-expression> ::= <identifier>
+                       | <constant>
+                       | <string>
+                       | ( <expression> ) # Requires anything of greater hierarchy to be wrapped in brackets (Ie. can't have ++ (int) a)
+
+# ------------------------ Miscellaneous ------------------------
+
+# A list of identifiers
+<identifier-list> ::= <identifier>
+                    | <identifier-list> , <identifier>
+
+# These are the variable names
+<identifier> ::= <letter> {<alpha-num>}*
+
+# ------------------------ Constants ------------------------
+# These are the available constants and their definitions
+# They are typically built of types of symbols
+
+<constant> ::= <integer-constant>
+             | <character-constant>
+             | <floating-constant>
+
+<string> ::= " {<alpha-num>}* "
+
+<character-constant> ::= ' <alpha-num> '
+
+<integer-constant> ::= <signed-integer>
+                     | <unsigned-integer>
+
+<floating-constant> ::= <integer> . <unsigned-integer>
+
+<signed-integer> ::= <sign> <unsigned-integer>
+
+<unsigned-integer> ::= {<digit>}+
+
+# ------------------------ Symbols ------------------------
+# These are the basic symbols that can be used in the program
+
+<sign> ::= +
+         | -
+
+<alpha-num> ::= <digit> 
+              | <letter>
+
+<digit> ::= 0
+          | 1
+          | 2
+          | 3
+          | 4
+          | 5
+          | 6
+          | 7
+          | 8
+          | 9
+
+<letter> ::= A
+           | B
+           | C
+           | D
+           | E
+           | F
+           | G
+           | H
+           | I
+           | J
+           | K
+           | L
+           | M
+           | N
+           | O
+           | P
+           | Q
+           | R
+           | S
+           | T
+           | U
+           | V
+           | W
+           | X
+           | Y
+           | Z
+           | a
+           | b
+           | c
+           | d
+           | e
+           | f
+           | g
+           | h
+           | i
+           | j
+           | k
+           | l
+           | m
+           | n
+           | o
+           | p
+           | q
+           | r
+           | s
+           | t
+           | u
+           | v
+           | w
+           | x
+           | y
+           | z
