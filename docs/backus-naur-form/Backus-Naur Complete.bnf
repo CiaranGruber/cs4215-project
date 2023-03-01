@@ -12,6 +12,14 @@
 
 # ------------------------ Statements ------------------------
 
+# The default statement
+<statement> ::= <labelled-statement>
+              | <compound-statement>
+              | <expression-statement>
+              | <selection-statement>
+              | <iteration-statement>
+              | <jump-statement>
+
 # Labelled statements - used for goto and other things
 <labelled-statement> ::= <identifier> : <statement>
                       | case <constant-expression> : <statement>
@@ -74,7 +82,7 @@
 # ------------------------ Declarations ------------------------
 # Used when referencing an existing variable, etc
 
-<declarator-list> ::= <declaration>
+<declaration-list> ::= <declaration>
                     | <declaration-list> <declaration>
 
 # Contains a set of specifiers and the initialiser
@@ -83,7 +91,7 @@
 # Creates a set of declaration specifiers
 <declaration-specifiers> ::= <storage-class-specifier> {<declaration-specifiers>}?
                            | <type-specifier> {<declaration-specifiers>}?
-                           | <type-qualfier> {<declaration-specifiers>}?
+                           | <type-qualifier> {<declaration-specifiers>}?
                            | <function-specifier> {<declaration-specifiers>}?
 
 # A decorated name/identifier
@@ -123,8 +131,6 @@
                                | <direct-abstract-declarator> [ <type-qualifier-list> static <assignment-expression> ] # Array declaration with static expression
                                | <direct-abstract-declarator> [ <type-qualifier-list> * ] # Variable length array - only used within declarations of functions
                                | <direct-abstract-declarator> ( <parameter-type-list> ) # Used for defining functions
-
-<typedef-name> ::= <identifier>
 
 # ------------------------ Type specification ------------------------
 # These specify the actual type
@@ -339,42 +345,461 @@
 
 # ------------------------ Miscellaneous ------------------------
 
+# Identifies a typedef name
+<typedef-name> ::= <identifier>
+
+# ------------------------ Basic Lexical Elements ------------------------
+
+# The minimal lexical element of the language
+<token> ::= <keyword>
+          | <identifier>
+          | <constant>
+          | <string-literal>
+          | <punctuator>
+
+# Used as a token that is preprocessed (Eg. Added to VM as val:)
+<preprocessing-token> ::= <header-name>
+                        | <identifier>
+                        | <pp-number>
+                        | <character-constant>
+                        | <string-literal>
+                        | <punctuator>
+                        | 
+
+# ------------------------ Keywords ------------------------
+
+# These are case-sensitive and cannot be used for anything such as identifiers, etc
+# Note: Whether these are implemented, should not change if they are accepted as identifiers in order to prevent compilation errors
+<keyword> ::= auto
+            | break
+            | case
+            | char
+            | const
+            | continue
+            | default
+            | do
+            | double
+            | else
+            | enum
+            | extern
+            | float
+            | for
+            | goto
+            | if
+            | inline
+            | int
+            | long
+            | register
+            | restrict
+            | return
+            | short
+            | signed
+            | sizeof
+            | static
+            | struct
+            | switch
+            | typedef
+            | union
+            | unsigned
+            | void
+            | volatile
+            | while
+            | _Alignas
+            | _Alignof
+            | _Atomic
+            | _Bool
+            | _Complex
+            | _Generic
+            | _Imaginary
+            | _Noreturn
+            | _Static_assert
+            | _Thread_local
+
+# ------------------------ Identifiers ------------------------
+
 # A list of identifiers
 <identifier-list> ::= <identifier>
                     | <identifier-list> , <identifier>
 
 # These are the variable names
-<identifier> ::= <letter> {<alpha-num>}*
+<identifier> ::= <identifier-nondigit>
+               | <identifier> <identifier-nondigit>
+               | <identifier> <digit>
+
+# Parts of the identifier that are non digits
+<identifier-nondigit> ::= <nondigit>
+                        | <universal-character-name>
+
+# ------------------------ Universal Character Names ------------------------
+
+<universal-character-name> ::= \u <hex-quad>
+                             | \U <hex-quad> <hex-quad>
+
+<hex-quad> ::= <hexadecimal-digit> <hexadecimal-digit> <hexadecimal-digit> <hexadecimal-digit>
 
 # ------------------------ Constants ------------------------
 # These are the available constants and their definitions
 # They are typically built of types of symbols
 
 <constant> ::= <integer-constant>
-             | <character-constant>
              | <floating-constant>
+             | <enumeration-constant>
+             | <character-constant>
 
-<string> ::= " {<alpha-num>}* "
+# ------------------------ Integer Constants ------------------------
 
-<character-constant> ::= ' <alpha-num> '
+<integer-constant> ::= <decimal-constant> {<integer-suffix>}? # Decimal integer
+                     | <octal-constant> {<integer-suffix>}? # Octal integer
+                     | <hexadecimal-constant> {<integer-suffix>}? # Hexadecimal integer
 
-<integer-constant> ::= <signed-integer>
-                     | <unsigned-integer>
+# Used to represent the standard decimals - Must start with not 0
+<decimal-constant> ::= <non-zero-digit>
+                     | <decimal-constant> <digit>
 
-<floating-constant> ::= <integer> . <unsigned-integer>
+# Used to represent an octal number - Must start with 0
+<octal-constant> ::= 0
+                   | <octal-constant> <octal-digit>
 
-<signed-integer> ::= <sign> <unsigned-integer>
+# Used to represent hexadecimal constants, used mainly for pointers - Must start with the prefix and at least one digit
+<hexadecimal-constant> ::= <hexadecimal-prefix> <hexadecimal-digit>
+                         | <hexadecimal-constant> <hexadecimal-digit>
 
-<unsigned-integer> ::= {<digit>}+
+<integer-suffix> ::= <unsigned-suffix> {<long-suffix>}? # Allows unsigned potentially double-long integers
+                   | <unsigned-suffix> {<long-long-suffix>}? # Allows unsigned potentially double-long integers
+                   | <long-suffix> {<unsigned-suffix>}? # Allows long potentially unsigned integers
+                   | <long-long-suffix> {<unsigned-suffix>}? # # Allows double-long potentially unsigned integers
 
-# ------------------------ Symbols ------------------------
+# Specifies that a given integer is unsigned
+<unsigned-suffix> ::= u
+                    | U
+
+# Specifies that a given integer is a long value
+<long-suffix> ::= l
+                | L
+
+# Specifies that a given integer is a double-long value
+<long-long-suffix> ::= ll
+                     | LL
+
+# ------------------------ Floating Constants ------------------------
+# Note: Floating constants are doubles unless specified by a suffix
+
+<floating-constant> ::= <decimal-floating-constant>
+                      | <hexadecimal-floating-constant>
+
+# Floating-point numbers represented with a decimal format
+<decimal-floating-constant> ::= <fractional-constant> {<exponent-part>}? {<floating-suffix>}? # Allows standard floats
+                              | <digit-sequence> <exponent-part> {<floating-suffix>}? # Allows floats with exponent
+
+# Floating-point numbers represented with a hexadecimal format
+<hexadecimal-floating-constant> ::= <hexadecimal-prefix> <hexadecimal-fractional-constant> <binary-exponent-part> {<floating-suffix>}?
+                                  | <hexadecimal-prefix> <hexadecimal-digit-sequence> <binary-exponent-part> {<floating-suffix>}?
+
+# The main part of the decimal number. Ie '23.2' in '23.2e2 f L'
+<fractional-constant> ::= {<digit-sequence>}? . <digit-sequence> # Allows numbers such as .232 or 23.24
+                        | <digit-sequence> . # Allows numbers such as 23. to be a double
+
+# The exponent part of a floating-point decimal number
+<exponent-part> ::= e {<sign>}? <digit-sequence>
+                  | E {<sign>}? <digit-sequence>
+
+# The main part of the hexadecimal number. Ie 'e.f21' in 'e.f21p21'
+<hexadecimal-fractional-constant> ::= {<hexadecimal-digit-sequence>}? . <hexadecimal-digit-sequence>
+
+# The exponent part of a floating-point hexadecimal number. Note: Means exponents in hexadecimal are not hex
+<binary-exponent-part> ::= p {<sign>}? <digit-sequence>
+                         | P {<sign>}? <digit-sequence>
+
+# The suffix used for floating point numbers
+<floating-suffix> ::= f # Specifies that it should be a float instead of a double
+                    | F # Same as f
+                    | l # Specifies the given double is represented with a float (and so more precise)
+                    | L # Same as l
+
+# ------------------------ Enumeration Constants ------------------------
+
+# The enumeration constant
+<enumeration-constant> ::= <identifier>
+
+# ------------------------ Character Constants ------------------------
+
+# Specifies the format for character constants
+# Note: Other versions are primarily used to manage how hexadecimal escape sequences represent values
+<character-constant> ::= ' <c-char-sequence> ' # Represents octal/hex escape sequences as unsigned char
+                       | L' <c-char-sequence> ' # Represents octal/hex escape sequences as wchar_t
+                       | u' <c-char-sequence> ' # Represents octal/hex escape sequences as char16_t
+                       | U' <c-char-sequence> ' # Represents octal/hex escape sequences as char32_t
+
+# ------------------------ String Constants ------------------------
+
+# Specifies the format for string literals
+<string-literal> ::= {<encoding-prefix>}? " {<s-char-sequence>}? "
+
+# The encoding prefix for the string literal
+<encoding-prefix> ::= u8
+                    | u
+                    | U
+                    | L
+
+# ------------------------ Punctuators ------------------------
+
+# Should not be trimmed with sublanguage in order to avoid invalid C programs running
+<punctuator> ::= [
+               | ]
+               | (
+               | )
+               | {
+               | }
+               | .
+               | ->
+               | ++
+               | --
+               | &
+               | *
+               | +
+               | -
+               | ~
+               | !
+               | /
+               | %
+               | <<
+               | >>
+               | <
+               | >
+               | <=
+               | >=
+               | ==
+               | !=
+               | ^
+               | |
+               | &&
+               | ||
+               | ?
+               | :
+               | ;
+               | ...
+               | =
+               | *=
+               | /=
+               | %=
+               | +=
+               | -=
+               | <<=
+               | >>=
+               | &=
+               | ^=
+               | |=
+               | ,
+               | #
+               | ##
+               | <:
+               | :>
+               | <%
+               | %>
+               | %:
+               | %:%:
+
+# ------------------------ Header names ------------------------
+
+# Represents header names when doing #import <header.h>
+<header-name> ::= < <h-char-sequence> >
+                | " <q-char-sequence> "
+
+# ------------------------ Preprocessing Numbers ------------------------
+
+# See C Spec 6.10.1 about conditional inclusion for use case 
+<pp-number> ::= <digit>
+              | . <digit>
+              | <pp-number> <digit>
+              | <pp-number> <identifier-nondigit>
+              | <pp-number> e <sign>
+              | <pp-number> E <sign>
+              | <pp-number> p <sign>
+              | <pp-number> P <sign>
+              | <pp-number> .
+
+# ------------------------ Basic constant representations ------------------------
+
+# A sequence of digits
+<digit-sequence> ::= <digit>
+                   | <digit-sequence> <digit>
+
+# A sequence of hexadecimal digits
+<hexadecimal-digit-sequence> ::= <hexadecimal-digit>
+                               | <hexadecimal-digit-sequence> <hexadecimal-digit>
+
+# Represents a sequence of characters in c
+<c-char-sequence> ::= <c-char>
+                    | <c-char-sequence> <c-char>
+
+# Represents a single char character - Should represent all characters in source character set excluding ', \, and \n
+<c-char> ::= # All characters described above
+           | <escape-sequence>
+
+# The character sequence for a string
+<s-char-sequence> ::= <s-char>
+                    | <s-char-sequence> <s-char>
+
+# Represents a single string character - Should represent all characters in source character set excluding ", \, and \n
+<s-char> ::= # All characters described above 
+           | <escape-sequence>
+
+# The character sequence for a header with global reference
+<h-char-sequence> ::= <h-char>
+                    | <h-char-sequence> <h-char>
+
+# Represents a single header character - Should represent all characters in source character set excluding \n, and >
+<h-char> ::= # All characters described above 
+           | <escape-sequence>
+
+# The character sequence for a header with local reference
+<q-char-sequence> ::= <q-char>
+                    | <q-char-sequence> <q-char>
+
+# Represents a single header character - Should represent all characters in source character set excluding \n, and "
+<q-char> ::= # All characters described above 
+           | <escape-sequence>
+
+# A typical escape sequence in C strings or characters
+<escape-sequence> ::= <simple-escape-sequence> # The standard escape sequence
+                    | <octal-escape-sequence> # An escape sequence with an octal number
+                    | <hexadecimal-escape-sequence> # A hexadecimal escape sequence
+
+# ------------------------------------------------------ REMOVE ADDITIONAL CHARACTERS FOR CHAR/STRING QUOTES 
+# Represents a standard escape sequence
+<simple-escape-sequence> ::= \'
+'                           | \"
+"                           | \?
+                           | \\
+                           | \a
+                           | \b
+                           | \f
+                           | \n
+                           | \r
+                           | \t
+                           | \v
+
+# Represents an octal escape sequence
+<octal-escape-sequence> ::= \ <octal-digit>
+                          | \ <octal-digit> <octal-digit>
+                          | \ <octal-digit> <octal-digit>
+
+# Represents a hexadecimal escape sequence
+<hexadecimal-escape-sequence> ::= \x <hexadecimal-digit>
+                                | <hexadecimal-escape-sequence> <hexadecimal-digit>
+
+# ------------------------ Basic Symbols ------------------------
 # These are the basic symbols that can be used in the program
 
 <sign> ::= +
          | -
 
-<alpha-num> ::= <digit> 
-              | <letter>
+# The prefix required for hexadecimal integers
+<hexadecimal-prefix> ::= 0x
+
+<nonzero-digit> ::= 1
+                  | 2
+                  | 3
+                  | 4
+                  | 5
+                  | 6
+                  | 7
+                  | 8
+                  | 9
+
+<octal-digit> ::= 0
+                | 1
+                | 2
+                | 3
+                | 4
+                | 5
+                | 6
+                | 7
+
+<hexadecimal-digit> ::= 0
+                      | 1
+                      | 2
+                      | 3
+                      | 4
+                      | 5
+                      | 6
+                      | 7
+                      | 8
+                      | 9
+                      | a
+                      | b
+                      | c
+                      | d
+                      | e
+                      | f
+                      | A
+                      | B
+                      | C
+                      | D
+                      | E
+                      | F
+
+<nondigit> ::= _
+             | A
+             | B
+             | C
+             | D
+             | E
+             | F
+             | G
+             | H
+             | I
+             | J
+             | K
+             | L
+             | M
+             | N
+             | O
+             | P
+             | Q
+             | R
+             | S
+             | T
+             | U
+             | V
+             | W
+             | X
+             | Y
+             | Z
+             | a
+             | b
+             | c
+             | d
+             | e
+             | f
+             | g
+             | h
+             | i
+             | j
+             | k
+             | l
+             | m
+             | n
+             | o
+             | p
+             | q
+             | r
+             | s
+             | t
+             | u
+             | v
+             | w
+             | x
+             | y
+             | z
+
+
+# Represents the entire source character set (excluding a few special characters excluded elsewhere)
+<source-character> ::= <digit>
+                     | <letter>
+                     | <punctuation-exc-special>
+
+<punctuation-exc-special> ::= 
 
 <digit> ::= 0
           | 1
@@ -387,55 +812,55 @@
           | 8
           | 9
 
-<letter> ::= A
-           | B
-           | C
-           | D
-           | E
-           | F
-           | G
-           | H
-           | I
-           | J
-           | K
-           | L
-           | M
-           | N
-           | O
-           | P
-           | Q
-           | R
-           | S
-           | T
-           | U
-           | V
-           | W
-           | X
-           | Y
-           | Z
-           | a
-           | b
-           | c
-           | d
-           | e
-           | f
-           | g
-           | h
-           | i
-           | j
-           | k
-           | l
-           | m
-           | n
-           | o
-           | p
-           | q
-           | r
-           | s
-           | t
-           | u
-           | v
-           | w
-           | x
-           | y
+<letter> ::= A 
+           | B 
+           | C 
+           | D 
+           | E 
+           | F 
+           | G 
+           | H 
+           | I 
+           | J 
+           | K 
+           | L 
+           | M 
+           | N 
+           | O 
+           | P 
+           | Q 
+           | R 
+           | S 
+           | T 
+           | U 
+           | V 
+           | W 
+           | X 
+           | Y 
+           | Z 
+           | a 
+           | b 
+           | c 
+           | d 
+           | e 
+           | f 
+           | g 
+           | h 
+           | i 
+           | j 
+           | k 
+           | l 
+           | m 
+           | n 
+           | o 
+           | p 
+           | q 
+           | r 
+           | s 
+           | t 
+           | u 
+           | v 
+           | w 
+           | x 
+           | y 
            | z
