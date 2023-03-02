@@ -50,7 +50,7 @@
 <direct-declarator> ::= <identifier> 
                       | ( <declarator> ) 
                       | <direct-declarator> [ {<type-qualifier-list>}? {<assignment-expression>}? ] 
-                      | <direct-declarator> [ <type-qualifier-list> * ] 
+                      /* | <direct-declarator> [ <type-qualifier-list> * ]  */
                       | <direct-declarator> ( <parameter-type-list> ) 
                       | <direct-declarator> ( {<identifier-list>}? ) 
 
@@ -70,7 +70,7 @@
 
 <direct-abstract-declarator> ::= ( <abstract-declarator> )
                                | <direct-abstract-declarator> [ {<type-qualifier-list>}? {<assignment-expression>}? ] 
-                               | <direct-abstract-declarator> [ <type-qualifier-list> * ] 
+                               /* | <direct-abstract-declarator> [ <type-qualifier-list> * ]  */
                                | <direct-abstract-declarator> ( <parameter-type-list> ) 
 
 <statement> ::= <labelled-statement>

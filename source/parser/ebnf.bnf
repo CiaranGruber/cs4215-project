@@ -85,9 +85,8 @@ Direct-declarator
     : Identifier
     | '(' Declarator ')'
     | Direct-declarator '[' Type-qualifier-list? Assignment-expression? ']'
-    | Direct-declarator '[' Type-qualifier-list '*' ']'
-    | Direct-declarator '(' Parameter-type-list ')'
-    | Direct-declarator '(' Identifier-list? ')'
+    /* | Direct-declarator '[' Type-qualifier-list '*' ']' */
+    | Direct-declarator '(' (Parameter-type-list | Identifier-list?) ')'
     ;
 
 Pointer 
@@ -114,7 +113,7 @@ Abstract-declarator
 Direct-abstract-declarator 
     : '(' Abstract-declarator ')'
     | Direct-abstract-declarator '[' Type-qualifier-list? Assignment-expression? ']'
-    | Direct-abstract-declarator '[' Type-qualifier-list '*' ']'
+    /* | Direct-abstract-declarator '[' Type-qualifier-list '*' ']' */
     | Direct-abstract-declarator '(' Parameter-type-list ')'
     ;
 
