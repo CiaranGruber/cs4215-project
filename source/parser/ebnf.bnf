@@ -1,0 +1,351 @@
+Translation-unit 
+    : External-definition+
+    ;
+
+External-declaration 
+    : Function-definition
+    | Declaration
+    ;
+
+Function-definition 
+    : Declaration-specifiers Declarator Declaration-list? Compound-statement
+    ;
+
+Compound-statement 
+    : '{' Block-item-list? '}'
+    ;
+
+Block-item-list 
+    : Block-item+
+    ;
+
+Block-item 
+    : Declaration
+    | Statement
+    ;
+
+Expression-statement 
+    : Expression? ';'
+    ;
+
+Selection-statement 
+    : 'if' '(' Expression ')' Statement ('else' Statement)?
+    ;
+
+Iteration-statement 
+    : 'while' '(' Expression ')' Statement
+    ;
+
+Jump-statement 
+    : 'return' Expression? ';'
+    ;
+
+Initialiser 
+    : Assignment-expression
+    | '{' Initialiser-list (',')? '}'
+    ;
+
+Initialiser-list 
+    : (Initialiser-list ',')? Designation? Initialiser
+    ;
+
+Designation 
+    : Designator-list '='
+    ;
+
+Designator-list 
+    : Designator+
+    ;
+
+Designator 
+    : '[' Constant-expression ']'
+    | '.' Identifier
+    ;
+
+Init-declarator-list 
+    : (Init-declarator ',')* Init-declarator
+    ;
+
+Init-declarator 
+    : Declarator ('=' Initialiser)?
+    ;
+
+Declaration 
+    : Declaration-specifiers Init-declarator-list? ';'
+    ;
+
+Declaration-specifiers 
+    : (Storage-class-specifier | Type-specifier | Type-qualfier | Function-specifier) Declaration-specifiers?
+    ;
+
+Declarator 
+    : Pointer? Direct-declarator
+
+Direct-declarator 
+    : Identifier
+    | '(' Declarator ')'
+    | Direct-declarator '[' Type-qualifier-list? Assignment-expression? ']'
+    /* | Direct-declarator '[' Type-qualifier-list '*' ']' */
+    | Direct-declarator '(' (Parameter-type-list | Identifier-list?) ')'
+    ;
+
+Pointer 
+    : ('*' Type-qualifier-list?)+ 
+    ;
+
+Parameter-type-list 
+    : Parameter-list
+    ;
+
+Parameter-list 
+    : (Parameter-declaration ',')* Parameter-declaration
+    ;
+
+Parameter-declaration 
+    : Declaration-specifiers (Declarator | Abstract-declarator?)
+    ;
+
+Abstract-declarator 
+    : Pointer
+    | Pointer? Direct-abstract-declarator
+    ;
+
+Direct-abstract-declarator 
+    : '(' Abstract-declarator ')'
+    | Direct-abstract-declarator '[' Type-qualifier-list? Assignment-expression? ']'
+    /* | Direct-abstract-declarator '[' Type-qualifier-list '*' ']' */
+    | Direct-abstract-declarator '(' Parameter-type-list ')'
+    ;
+
+Statement 
+    : Labelled-statement
+    | Compound-statement
+    | Expression-statement
+    | Selection-statement
+    | Iteration-statement
+    | Jump-statement
+    ;
+
+Type-specifier 
+    : 'void'
+    | 'char'
+    | 'int'
+    | 'double'
+    ;
+
+Type-qualifier-list 
+    : Type-qualifier+
+    ;
+
+Type-qualifier 
+    : 'const'
+    ;
+
+Type-name 
+    : Specifier-qualifier-list Abstract-declarator?
+    ;
+
+Specifier-qualifier-list 
+    : (Type-specifier | Type-qualifier)+
+    ;
+
+Constant-expression 
+    : Conditional-expression
+    ;
+
+Expression 
+    : Assignment-expression
+    ;
+
+Assignment-expression 
+    : Conditional-expression
+    | Unary-expression ('=' | Assignment-operator-shorthand) Assignment-expression
+    ;
+
+Assignment-operator-shorthand 
+    : ('*=' | '/=' | '%=' | '+=' | '-=')
+    ;
+
+Conditional-expression 
+    : Logical-or-expression
+    ;
+
+Logical-or-expression 
+    : (logical-and-expression '&&')* Logical-and-expression
+    ;
+
+Logical-and-expression 
+    : (Equality-expression '&&')* Equality-expression
+    ;
+
+Equality-expression 
+    : (Equality-expression Equality-operators)? Relational-expression
+    ;
+
+Equality-operators 
+    : '=='
+    | '!='
+    ;
+
+Relational-expression
+    :   Additive-expression (('<'|'>'|'<='|'>=') Additive-expression)*
+    ;
+
+Additive-expression
+    :   Multiplicative-expression (('+'|'-') Multiplicative-expression)*
+    ;
+
+Multiplicative-expression
+    :   Cast-expression (('*'|'/'|'%') Cast-expression)*
+    ;
+
+
+Cast-expression 
+    : ('(' type_name ')')* Unary-expression
+    ;
+
+Unary-expression 
+    : Postfix-expression
+    | ('++' | '--') Unary-expression
+    | Unary-operator Cast-expression
+    | 'sizeof' '(' Type-name ')'
+    ;
+
+Unary-operator 
+    : '&'
+    | '*'
+    | '+'
+    | '-'
+    | '!'
+    ;
+
+Postfix-expression 
+    : Primary-expression
+    | Postfix-expression '[' Expression ']' 
+    | Postfix-expression '(' Argument-expression-list? ')'
+    | Postfix-expression '++'
+    | Postfix-expression '--'
+    ;
+
+Primary-expression 
+    : Identifier
+    | Constant
+    | String
+    | '(' Expression ')'
+    ;
+
+Identifier-list 
+    : (Identifier-list ',')* Identifier
+    ;
+
+Identifier 
+    : Letter {Alpha-num}*
+    ;
+
+Constant 
+    : Integer-constant
+    | Character-constant
+    | Floating-constant
+    ;
+
+String 
+    : '"' {Alpha-num}* '"'
+    ;
+
+Character-constant 
+    : ''' Alpha-num '''
+    ;
+
+Integer-constant 
+    : Signed-integer
+    | Unsigned-integer
+    ;
+
+Floating-constant 
+    : Integer '.' Unsigned-integer
+    ;
+
+Signed-integer 
+    : Sign Unsigned-integer
+    ;
+
+Unsigned-integer 
+    : {Digit}+
+    ;
+
+Sign 
+    : (+ | -)
+    ;
+
+Alpha-num 
+    : Digit 
+    | Letter
+    ;
+
+Digit 
+    : '0'
+    | '1'
+    | '2'
+    | '3'
+    | '4'
+    | '5'
+    | '6'
+    | '7'
+    | '8'
+    | '9'
+    ;
+
+Letter 
+    : 'A'
+    | 'B'
+    | 'C'
+    | 'D'
+    | 'E'
+    | 'F'
+    | 'G'
+    | 'H'
+    | 'I'
+    | 'J'
+    | 'K'
+    | 'L'
+    | 'M'
+    | 'N'
+    | 'O'
+    | 'P'
+    | 'Q'
+    | 'R'
+    | 'S'
+    | 'T'
+    | 'U'
+    | 'V'
+    | 'W'
+    | 'X'
+    | 'Y'
+    | 'Z'
+    | 'a'
+    | 'b'
+    | 'c'
+    | 'd'
+    | 'e'
+    | 'f'
+    | 'g'
+    | 'h'
+    | 'i'
+    | 'j'
+    | 'k'
+    | 'l'
+    | 'm'
+    | 'n'
+    | 'o'
+    | 'p'
+    | 'q'
+    | 'r'
+    | 's'
+    | 't'
+    | 'u'
+    | 'v'
+    | 'w'
+    | 'x'
+    | 'y'
+    | 'z'
+    ;
