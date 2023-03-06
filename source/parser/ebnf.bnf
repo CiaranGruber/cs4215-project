@@ -1,283 +1,275 @@
-Translation-unit 
-    : External-definition+
+grammar Test;
+
+translation_unit 
+    : External_declaration+
     ;
 
-External-declaration 
-    : Function-definition
+External_declaration 
+    : Function_definition
     | Declaration
     ;
 
-Function-definition 
-    : Declaration-specifiers Declarator Declaration-list? Compound-statement
+Function_definition 
+    : Declaration_specifiers Declarator Declaration_list? Compound_statement
     ;
 
-Compound-statement 
-    : '{' Block-item-list? '}'
+Compound_statement 
+    : '{' Block_item_list? '}'
     ;
 
-Block-item-list 
-    : Block-item+
+Block_item_list 
+    : Block_item+
     ;
 
-Block-item 
+Block_item 
     : Declaration
     | Statement
     ;
 
-Expression-statement 
+Expression_statement 
     : Expression? ';'
     ;
 
-Selection-statement 
+Selection_statement 
     : 'if' '(' Expression ')' Statement ('else' Statement)?
     ;
 
-Iteration-statement 
+Iteration_statement 
     : 'while' '(' Expression ')' Statement
     ;
 
-Jump-statement 
+Jump_statement 
     : 'return' Expression? ';'
     ;
 
 Initialiser 
-    : Assignment-expression
-    | '{' Initialiser-list (',')? '}'
+    : Assignment_expression
+    | '{' Initialiser_list (',')? '}'
     ;
 
-Initialiser-list 
-    : (Initialiser-list ',')? Designation? Initialiser
+Initialiser_list 
+    : (Designation? Initialiser ',')* Designation? Initialiser
     ;
 
 Designation 
-    : Designator-list '='
+    : Designator_list '='
     ;
 
-Designator-list 
+Designator_list 
     : Designator+
     ;
 
 Designator 
-    : '[' Constant-expression ']'
+    : '[' Constant_expression ']'
     | '.' Identifier
     ;
 
-Init-declarator-list 
-    : (Init-declarator ',')* Init-declarator
+Init_declarator_list 
+    : (Init_declarator ',')* Init_declarator
     ;
 
-Init-declarator 
+Init_declarator 
     : Declarator ('=' Initialiser)?
+    ;
+    
+Declaration_list
+    : Declaration+
     ;
 
 Declaration 
-    : Declaration-specifiers Init-declarator-list? ';'
+    : Declaration_specifiers Init_declarator_list? ';'
     ;
 
-Declaration-specifiers 
-    : (Storage-class-specifier | Type-specifier | Type-qualfier | Function-specifier) Declaration-specifiers?
+Declaration_specifiers 
+    : (Type_specifier | Type_qualifier) Declaration_specifiers?
     ;
 
 Declarator 
-    : Pointer? Direct-declarator
+    : Pointer? Direct_declarator
+    ;
 
-Direct-declarator 
+Direct_declarator 
     : Identifier
     | '(' Declarator ')'
-    | Direct-declarator '[' Type-qualifier-list? Assignment-expression? ']'
-    /* | Direct-declarator '[' Type-qualifier-list '*' ']' */
-    | Direct-declarator '(' (Parameter-type-list | Identifier-list?) ')'
+    | Direct_declarator '[' Type_qualifier_list? Assignment_expression? ']'
+    /* | Direct_declarator '[' Type_qualifier_list '*' ']' */
+    | Direct_declarator '(' Parameter_type_list ')'
+    |  Direct_declarator '(' Identifier_list? ')'
     ;
 
 Pointer 
-    : ('*' Type-qualifier-list?)+ 
+    : ('*' Type_qualifier_list?)+ 
     ;
 
-Parameter-type-list 
-    : Parameter-list
+Parameter_type_list 
+    : Parameter_list
     ;
 
-Parameter-list 
-    : (Parameter-declaration ',')* Parameter-declaration
+Parameter_list 
+    : (Parameter_declaration ',')* Parameter_declaration
     ;
 
-Parameter-declaration 
-    : Declaration-specifiers (Declarator | Abstract-declarator?)
+Parameter_declaration 
+    : Declaration_specifiers (Declarator | Abstract_declarator?)
     ;
 
-Abstract-declarator 
+Abstract_declarator 
     : Pointer
-    | Pointer? Direct-abstract-declarator
+    | Pointer? Direct_abstract_declarator
     ;
 
-Direct-abstract-declarator 
-    : '(' Abstract-declarator ')'
-    | Direct-abstract-declarator '[' Type-qualifier-list? Assignment-expression? ']'
-    /* | Direct-abstract-declarator '[' Type-qualifier-list '*' ']' */
-    | Direct-abstract-declarator '(' Parameter-type-list ')'
+Direct_abstract_declarator 
+    : '(' Abstract_declarator ')'
+    | Direct_abstract_declarator '[' Type_qualifier_list? Assignment_expression? ']'
+    /* | Direct_abstract_declarator '[' Type_qualifier_list '*' ']' */
+    | Direct_abstract_declarator '(' Parameter_type_list ')'
     ;
 
 Statement 
-    : Labelled-statement
-    | Compound-statement
-    | Expression-statement
-    | Selection-statement
-    | Iteration-statement
-    | Jump-statement
+    : Compound_statement
+    | Expression_statement
+    | Selection_statement
+    | Iteration_statement
+    | Jump_statement
     ;
 
-Type-specifier 
+Type_specifier 
     : 'void'
     | 'char'
     | 'int'
     | 'double'
     ;
 
-Type-qualifier-list 
-    : Type-qualifier+
+Type_qualifier_list 
+    : Type_qualifier+
     ;
 
-Type-qualifier 
+Type_qualifier 
     : 'const'
     ;
-
-Type-name 
-    : Specifier-qualifier-list Abstract-declarator?
+    
+Type_name 
+    : Specifier_qualifier_list Abstract_declarator?
     ;
 
-Specifier-qualifier-list 
-    : (Type-specifier | Type-qualifier)+
+Specifier_qualifier_list 
+    : (Type_specifier | Type_qualifier)+
     ;
 
-Constant-expression 
-    : Conditional-expression
+Constant_expression 
+    : Conditional_expression
     ;
 
 Expression 
-    : Assignment-expression
+    : Assignment_expression
     ;
 
-Assignment-expression 
-    : Conditional-expression
-    | Unary-expression ('=' | Assignment-operator-shorthand) Assignment-expression
+Assignment_expression 
+    : Conditional_expression
+    | Unary_expression ('=' | Assignment_operator_shorthand) Assignment_expression
     ;
 
-Assignment-operator-shorthand 
+Assignment_operator_shorthand 
     : ('*=' | '/=' | '%=' | '+=' | '-=')
     ;
 
-Conditional-expression 
-    : Logical-or-expression
+Conditional_expression 
+    : Logical_or_expression
     ;
 
-Logical-or-expression 
-    : (logical-and-expression '&&')* Logical-and-expression
+Logical_or_expression 
+    : (Logical_and_expression '&&')* Logical_and_expression
     ;
 
-Logical-and-expression 
-    : (Equality-expression '&&')* Equality-expression
+Logical_and_expression 
+    : (Equality_expression '&&')* Equality_expression
     ;
 
-Equality-expression 
-    : (Equality-expression Equality-operators)? Relational-expression
+Equality_expression 
+    : Relational_expression (('==' | '!=') Relational_expression)*
     ;
 
-Equality-operators 
-    : '=='
-    | '!='
+Relational_expression
+    :   Additive_expression (('<'|'>'|'<='|'>=') Additive_expression)*
     ;
 
-Relational-expression
-    :   Additive-expression (('<'|'>'|'<='|'>=') Additive-expression)*
+Additive_expression
+    :   Multiplicative_expression (('+'|'-') Multiplicative_expression)*
     ;
 
-Additive-expression
-    :   Multiplicative-expression (('+'|'-') Multiplicative-expression)*
+Multiplicative_expression
+    :   Unary_expression (('*'|'/'|'%') Unary_expression)*
     ;
 
-Multiplicative-expression
-    :   Cast-expression (('*'|'/'|'%') Cast-expression)*
+Unary_expression 
+    : Postfix_expression
+    | ('++' | '--' | Unary_operator) Unary_expression
+    | 'sizeof' '(' Type_name ')'
     ;
 
-
-Cast-expression 
-    : ('(' type_name ')')* Unary-expression
+Unary_operator 
+    : '&' | '*' | '+' | '-' | '~' | '!'
     ;
 
-Unary-expression 
-    : Postfix-expression
-    | ('++' | '--') Unary-expression
-    | Unary-operator Cast-expression
-    | 'sizeof' '(' Type-name ')'
+Postfix_expression 
+    : Primary_expression ('[' Expression ']' | '(' Argument_expression_list? ')' | '++' | '--')
     ;
 
-Unary-operator 
-    : '&'
-    | '*'
-    | '+'
-    | '-'
-    | '!'
+Argument_expression_list
+    : (Assignment_expression ',')* Assignment_expression
     ;
 
-Postfix-expression 
-    : Primary-expression
-    | Postfix-expression '[' Expression ']' 
-    | Postfix-expression '(' Argument-expression-list? ')'
-    | Postfix-expression '++'
-    | Postfix-expression '--'
-    ;
-
-Primary-expression 
+Primary_expression 
     : Identifier
     | Constant
     | String
     | '(' Expression ')'
     ;
 
-Identifier-list 
-    : (Identifier-list ',')* Identifier
+Identifier_list 
+    : (Identifier ',')* Identifier
     ;
 
 Identifier 
-    : Letter {Alpha-num}*
+    : Letter (Alpha_num)*
     ;
 
 Constant 
-    : Integer-constant
-    | Character-constant
-    | Floating-constant
+    : Integer_constant
+    | Character_constant
+    | Floating_constant
     ;
 
 String 
-    : '"' {Alpha-num}* '"'
+    : '"' (Alpha_num)* '"'
     ;
 
-Character-constant 
-    : ''' Alpha-num '''
+Character_constant 
+    : '\'' Alpha_num '\''
     ;
 
-Integer-constant 
-    : Signed-integer
-    | Unsigned-integer
+Integer_constant 
+    : Signed_integer
+    | Unsigned_integer
     ;
 
-Floating-constant 
-    : Integer '.' Unsigned-integer
+Floating_constant 
+    : Integer_constant '.' Unsigned_integer
     ;
 
-Signed-integer 
-    : Sign Unsigned-integer
+Signed_integer 
+    : Sign Unsigned_integer
     ;
 
-Unsigned-integer 
-    : {Digit}+
+Unsigned_integer 
+    : (Digit)+
     ;
 
 Sign 
-    : (+ | -)
+    : '+' | '-'
     ;
 
-Alpha-num 
+Alpha_num 
     : Digit 
     | Letter
     ;
