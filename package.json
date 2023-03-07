@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "generate-parser": "antlr4 -Dlanguage=Typescript -visitor  src/parser/C.g4 -o src/parser/antlr4_gen"
+    "generate-parser": "antlr4 -Dlanguage=TypeScript -visitor src/parser/C.g4 -o src/parser/antlr4_gen"
   },
   "devDependencies": {
     "antlr4": "^4.12.0"
