@@ -1,11 +1,8 @@
 {
   "scripts": {
-    "generate-parser": "java -jar antlr-4.12.0-complete.jar -Dlanguage=Typescript -visitor  src/parser/C.g4 -o src/parser/antlr4_gen"
+    "generate-parser": "antlr4 -Dlanguage=TypeScript -visitor  src/parser/C.g4 -o src/parser/antlr_gen"
   },
   "devDependencies": {
     "antlr4": "^4.12.0"
-  },
-  "dependencies": {
-    "@types/antlr4": "^4.11.2"
   }
 }
