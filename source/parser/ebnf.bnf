@@ -89,12 +89,7 @@ Declarator
     ;
 
 Direct_declarator 
-    : Identifier
-    | '(' Declarator ')'
-    | Direct_declarator '[' Type_qualifier_list? Assignment_expression? ']'
-    /* | Direct_declarator '[' Type_qualifier_list '*' ']' */
-    | Direct_declarator '(' Parameter_type_list ')'
-    |  Direct_declarator '(' Identifier_list? ')'
+    : (Identifier | '(' Declarator ')') ('[' Type_qualifier_list? Assignment_expression? ']' | '(' Parameter_type_list ')' | '(' Identifier_list? ')')*
     ;
 
 Pointer 
@@ -106,7 +101,7 @@ Parameter_type_list
     ;
 
 Parameter_list 
-    : (Parameter_declaration ',')* Parameter_declaration
+    : Parameter_declaration (',' Parameter_declaration)*
     ;
 
 Parameter_declaration 
@@ -119,10 +114,7 @@ Abstract_declarator
     ;
 
 Direct_abstract_declarator 
-    : '(' Abstract_declarator ')'
-    | Direct_abstract_declarator '[' Type_qualifier_list? Assignment_expression? ']'
-    /* | Direct_abstract_declarator '[' Type_qualifier_list '*' ']' */
-    | Direct_abstract_declarator '(' Parameter_type_list ')'
+    : '(' Abstract_declarator ')' ('[' Type_qualifier_list? Assignment_expression? ']' | '(' Parameter_type_list ')')*
     ;
 
 Statement 
