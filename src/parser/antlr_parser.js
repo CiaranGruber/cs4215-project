@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Antlr Parser
  *
@@ -6,38 +5,34 @@
  *
  * By Ciaran Gruber and Jody Tang
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-const antlr4ts_1 = require("antlr4ts");
-const CLexer_1 = require("./antlr_out/CLexer");
-const CParser_1 = require("./antlr_out/CParser");
-const tree_1 = require("antlr4ts/tree");
+import { CharStream, CommonTokenStream } from 'antlr4';
+import CLexer from "./antlr_gen/CLexer.js"; // Had to add .js - This is a hack
+import CParser from "./antlr_gen/CParser.js";
+import CompilationUnitVisitor from "./CompilationUnitVisitor.js";
 // Create the lexer and parser
-let inputStream = new antlr4ts_1.ANTLRInputStream(`
-int test() {
-    int a = 2;
-    return a;
+function compile(input) {
+    const chars = new CharStream(input); // replace this with a FileStream as required
+    let lexer = new CLexer(chars);
+    let tokenStream = new CommonTokenStream(lexer);
+    let parser = new CParser(tokenStream);
+    // Parse the input, where `compilationUnit` is whatever entry point you defined
+    let tree = parser.compilationUnit();
+    // Use the visitor entry point
+    return tree.accept(new CompilationUnitVisitor());
 }
+compile(`;
 
-test()`);
-let lexer = new CLexer_1.CLexer(inputStream);
-let tokenStream = new antlr4ts_1.CommonTokenStream(lexer);
-let parser = new CParser_1.CParser(tokenStream);
-// Parse the input, where `compilationUnit` is whatever entry point you defined
-let tree = parser.compilationUnit();
-// Extend the AbstractParseTreeVisitor to get default visitor behaviour
-class CountFunctionsVisitor extends tree_1.AbstractParseTreeVisitor {
-    defaultResult() {
-        return 0;
-    }
-    aggregateResult(aggregate, nextResult) {
-        return aggregate + nextResult;
-    }
-    visit(context) {
-        return 1 + super.visitChildren(context);
-    }
+int a = 2;
+
+int main() {
+    int i, sum = 0;
+       
+    for ( i = 1; i <= LAST; i++ ) {
+        sum += i;
+    } /*-for-*/
+    printf("sum = %d\\n", sum);
+
+    return 0;
 }
-// Create the visitor
-const countFunctionsVisitor = new CountFunctionsVisitor();
-// Use the visitor entry point
-countFunctionsVisitor.visit(tree);
+`);
 //# sourceMappingURL=antlr_parser.js.map
