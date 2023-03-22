@@ -5,11 +5,20 @@
  *
  * By Ciaran Gruber and Jody Tang
  */
-import CVisitor from "./antlr_gen/CVisitor.js";
+import CVisitor from "../parser/antlr_gen/CVisitor.js";
+import CompileTimeEnvironment from "./CompileTimeEnvironment.js";
+import { DeclarationSpecifier, DeclarationSpecifierType, QualifiedDeclarationSpecifier } from "./DeclarationSpecifier.js";
+/**
+ * Represents the VM tags
+ */
 export var VMTag;
 (function (VMTag) {
     VMTag["POP"] = "POP";
 })(VMTag || (VMTag = {}));
+/**
+ * Throws an error with the given message
+ * @param message
+ */
 function throw_error(message) {
     throw new Error(message);
 }
@@ -69,7 +78,7 @@ export default class CompilationUnitVisitor extends StandardCVisitor {
         const compilationData = new CCompilationData();
         compilationData.wc = 0;
         compilationData.instr = new Array();
-        super(compilationData, null);
+        super(compilationData, new CompileTimeEnvironment());
     }
     /**
      * Visits the compilation unit and returns the instructions array
@@ -77,8 +86,7 @@ export default class CompilationUnitVisitor extends StandardCVisitor {
      */
     // @ts-ignore
     visitCompilationUnit(ctx) {
-        const translationUnitVisitor = new TranslationUnitVisitor(this.cd, this.cte);
-        ctx.translationUnit().accept(translationUnitVisitor);
+        ctx.translationUnit().accept(new TranslationUnitVisitor(this.cd, this.cte));
         return this.cd.instr;
     }
 }
@@ -97,8 +105,7 @@ class TranslationUnitVisitor extends StandardCVisitor {
     visitTranslationUnit(ctx) {
         // Visit each external declaration
         ctx.externalDeclaration_list().forEach((context, index, array) => {
-            const externalDeclarationVisitor = new ExternalDeclarationVisitor(this.cd, this.cte);
-            context.accept(externalDeclarationVisitor);
+            context.accept(new ExternalDeclarationVisitor(this.cd, this.cte));
         });
         // Return instructions
         return this.cd.instr;
@@ -118,12 +125,10 @@ class ExternalDeclarationVisitor extends StandardCVisitor {
     // @ts-ignore
     visitExternalDeclaration(ctx) {
         if (ctx.functionDefinition() !== null) { // Function definition
-            const functionVisitor = new FunctionDefinitionVisitor(this.cd, this.cte);
-            ctx.functionDefinition().accept(functionVisitor);
+            ctx.functionDefinition().accept(new FunctionDefinitionVisitor(this.cd, this.cte));
         }
         else if (ctx.declaration() !== null) { // Standard Declaration
-            const declarationVisitor = new DeclarationVisitor(this.cd, this.cte);
-            ctx.declaration().accept(declarationVisitor);
+            ctx.declaration().accept(new DeclarationVisitor(this.cd, this.cte));
         }
         else if (ctx.Semi() === null) { // If not a stray semi-colon
             throw_error("Ignored definition in External Declaration");
@@ -144,8 +149,70 @@ class DeclarationVisitor extends StandardCVisitor {
      */
     // @ts-ignore
     visitDeclaration(ctx) {
-        throw_error("Declaration not implemented");
+        if (ctx.declarationSpecifiers() !== null) { // Standard declaration
+            // Get type information
+            const qualified_specifier = new DeclarationSpecifiersVisitor().visit(ctx.declarationSpecifiers());
+            const k = 1;
+        }
+        else {
+            throw_error("Unknown declaration type");
+        }
         return this.cd.instr;
+    }
+}
+class DeclarationSpecifiersVisitor extends CVisitor {
+    /**
+     * Visits the declaration specifiers and returns the relevant type information
+     * @param ctx The context for the declaration specifiers
+     */
+    // @ts-ignore
+    visitDeclarationSpecifiers(ctx) {
+        if (ctx.declarationSpecifier_list() !== null) { // Standard declaration list
+            // Get declaration specifier information
+            let specifiers = new Array();
+            ctx.declarationSpecifier_list().forEach((value, index, array) => {
+                const declaration_specifier_visitor = new DeclarationSpecifierVisitor();
+                specifiers.push(value.accept(declaration_specifier_visitor));
+            });
+            return new QualifiedDeclarationSpecifier(specifiers);
+        }
+        throw_error("Unknown declaration type");
+    }
+}
+class DeclarationSpecifierVisitor extends CVisitor {
+    /**
+     * Visits the declaration specifiers and returns the declaration specifier
+     * @param ctx The context for the declaration specifiers
+     */
+    // @ts-ignore
+    visitDeclarationSpecifier(ctx) {
+        if (ctx.typeSpecifier() !== null) { // Get the type specifier
+            const type_specifier_visitor = new TypeSpecifierVisitor();
+            return ctx.typeSpecifier().accept(type_specifier_visitor);
+        }
+        throw_error("Unknown declaration specifier");
+    }
+}
+class TypeSpecifierVisitor extends CVisitor {
+    /**
+     * Visits the type specifier and returns the string representation
+     * @param ctx The context for the type specifier
+     */
+    // @ts-ignore
+    visitTypeSpecifier(ctx) {
+        if (ctx.Void() !== null) { // Gets the representation for void
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Void().getText());
+        }
+        else if (ctx.Int() !== null) { // Gets the representation for int
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Int().getText());
+        }
+        else if (ctx.Char() !== null) { // Gets the representation for char
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Char().getText());
+        }
+        else if (ctx.Double() !== null) { // Gets the representation for double
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Double().getText());
+        }
+        throw_error("Unknown type specifier");
     }
 }
 class FunctionDefinitionVisitor extends StandardCVisitor {

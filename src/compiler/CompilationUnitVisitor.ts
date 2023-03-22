@@ -6,48 +6,28 @@
  * By Ciaran Gruber and Jody Tang
  */
 
-import CVisitor from "./antlr_gen/CVisitor.js";
+import CVisitor from "../parser/antlr_gen/CVisitor";
 import {
-    CompilationUnitContext, DeclarationContext, DeclarationSpecifierContext, DeclarationSpecifiersContext,
-    ExternalDeclarationContext, FunctionDefinitionContext,
-    TranslationUnitContext
-} from "./antlr_gen/CParser.js";
+    CompilationUnitContext,
+    DeclarationContext,
+    DeclarationSpecifierContext,
+    DeclarationSpecifiersContext,
+    ExternalDeclarationContext,
+    FunctionDefinitionContext,
+    TranslationUnitContext,
+    TypeSpecifierContext
+} from "../parser/antlr_gen/CParser";
 import CompileTimeEnvironment from "./CompileTimeEnvironment";
-import {BasicTypeMultiset, TypeMatcher} from "./TypeManagement";
-import {DeclarationSpecifier} from "./DeclarationSpecifier";
-
-export enum VMTag {
-    POP = "POP"
-}
-
-function throw_error(message: string) {
-    throw new Error(message);
-}
+import {BasicTypeMultiset} from "./TypeManagement";
+import {DeclarationSpecifier, DeclarationSpecifierType, QualifiedDeclarationSpecifier} from "./DeclarationSpecifier";
+import {Instruction} from "../evaluator/VirtualMachine";
 
 /**
- * The object used to represent a virtual machine instruction
+ * Throws an error with the given message
+ * @param message
  */
-export class Instruction {
-    /**
-     * The tag used to identify the instruction
-     */
-    public readonly tag: VMTag;
-    /**
-     * The additional values stored within the virtual machine instruction
-     * Note: Map can be replaced with object but may be more relevant for TypeScript than generic object
-     * Note 2: Any in map could be replaced with integer pointing to instruction that points to data in alternative array
-     */
-    public readonly values: Map<string, any> | null;
-
-    /**
-     * Initialises a new Instruction instance
-     * @param tag The tag for the instruction instance
-     * @param values The values to add for the instance
-     */
-    constructor(tag: VMTag, values: Map<string, any> | null) {
-        this.tag = tag;
-        this.values = values;
-    }
+function throw_error(message: string) {
+    throw new Error(message);
 }
 
 class CCompilationData {
@@ -125,9 +105,7 @@ export default class CompilationUnitVisitor extends StandardCVisitor {
      */
     // @ts-ignore
     visitCompilationUnit(ctx: CompilationUnitContext) {
-        const translationUnitVisitor: TranslationUnitVisitor = new TranslationUnitVisitor(this.cd,
-            this.cte);
-        ctx.translationUnit().accept(translationUnitVisitor)
+        ctx.translationUnit().accept(new TranslationUnitVisitor(this.cd, this.cte))
         return this.cd.instr;
     }
 }
@@ -148,10 +126,8 @@ class TranslationUnitVisitor extends StandardCVisitor {
     visitTranslationUnit(ctx: TranslationUnitContext) {
         // Visit each external declaration
         ctx.externalDeclaration_list().forEach((context, index, array) => {
-            const externalDeclarationVisitor = new ExternalDeclarationVisitor(this.cd,
-                this.cte);
-            context.accept(externalDeclarationVisitor);
-        })
+            context.accept(new ExternalDeclarationVisitor(this.cd, this.cte));
+        });
         // Return instructions
         return this.cd.instr;
     }
@@ -172,11 +148,9 @@ class ExternalDeclarationVisitor extends StandardCVisitor {
     // @ts-ignore
     visitExternalDeclaration(ctx: ExternalDeclarationContext) {
         if (ctx.functionDefinition() !== null) { // Function definition
-            const functionVisitor = new FunctionDefinitionVisitor(this.cd, this.cte);
-            ctx.functionDefinition().accept(functionVisitor);
+            ctx.functionDefinition().accept(new FunctionDefinitionVisitor(this.cd, this.cte));
         } else if (ctx.declaration() !== null) { // Standard Declaration
-            const declarationVisitor = new DeclarationVisitor(this.cd, this.cte);
-            ctx.declaration().accept(declarationVisitor);
+            ctx.declaration().accept(new DeclarationVisitor(this.cd, this.cte));
         } else if (ctx.Semi() === null) { // If not a stray semi-colon
             throw_error("Ignored definition in External Declaration");
         }
@@ -200,7 +174,8 @@ class DeclarationVisitor extends StandardCVisitor {
     visitDeclaration(ctx: DeclarationContext) {
         if (ctx.declarationSpecifiers() !== null) { // Standard declaration
             // Get type information
-
+            const qualified_specifier = new DeclarationSpecifiersVisitor().visit(ctx.declarationSpecifiers());
+            const k = 1;
         } else {
             throw_error("Unknown declaration type");
         }
@@ -220,15 +195,16 @@ class DeclarationSpecifiersVisitor extends CVisitor<BasicTypeMultiset> {
             let specifiers = new Array<DeclarationSpecifier>();
             ctx.declarationSpecifier_list().forEach((value, index,
                                                      array) => {
-
-            })
-        } else {
-            throw_error("Unknown declaration type");
+                const declaration_specifier_visitor = new DeclarationSpecifierVisitor();
+                specifiers.push(value.accept(declaration_specifier_visitor));
+            });
+            return new QualifiedDeclarationSpecifier(specifiers);
         }
+        throw_error("Unknown declaration type");
     }
 }
 
-class DeclarationSpecifierVisitor extends CVisitor<BasicTypeMultiset> {
+class DeclarationSpecifierVisitor extends CVisitor<DeclarationSpecifier> {
     /**
      * Visits the declaration specifiers and returns the declaration specifier
      * @param ctx The context for the declaration specifiers
@@ -236,10 +212,30 @@ class DeclarationSpecifierVisitor extends CVisitor<BasicTypeMultiset> {
     // @ts-ignore
     visitDeclarationSpecifier(ctx: DeclarationSpecifierContext) {
         if (ctx.typeSpecifier() !== null) { // Get the type specifier
-
-        } else {
-            throw_error("Unknown declaration type");
+            const type_specifier_visitor = new TypeSpecifierVisitor();
+            return ctx.typeSpecifier().accept(type_specifier_visitor);
         }
+        throw_error("Unknown declaration specifier");
+    }
+}
+
+class TypeSpecifierVisitor extends CVisitor<DeclarationSpecifier> {
+    /**
+     * Visits the type specifier and returns the string representation
+     * @param ctx The context for the type specifier
+     */
+    // @ts-ignore
+    visitTypeSpecifier(ctx: TypeSpecifierContext) {
+        if (ctx.Void() !== null) { // Gets the representation for void
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Void().getText());
+        } else if (ctx.Int() !== null) { // Gets the representation for int
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Int().getText());
+        } else if (ctx.Char() !== null) { // Gets the representation for char
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Char().getText());
+        } else if (ctx.Double() !== null) { // Gets the representation for double
+            return new DeclarationSpecifier(DeclarationSpecifierType.TYPE_SPECIFIER, ctx.Double().getText());
+        }
+        throw_error("Unknown type specifier");
     }
 }
 

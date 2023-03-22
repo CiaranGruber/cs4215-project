@@ -8,24 +8,20 @@
 
 import {CharStream, CommonTokenStream} from 'antlr4';
 import CLexer from "./antlr_gen/CLexer.js"; // Had to add .js - This is a hack
-import CParser from "./antlr_gen/CParser.js";
-import CompilationUnitVisitor, {Instruction} from "./CompilationUnitVisitor.js";
+import CParser, {CompilationUnitContext} from "./antlr_gen/CParser.js";
+import CompilationUnitVisitor from "../compiler/CompilationUnitVisitor";
 
-// Create the lexer and parser
-function compile(input: string) : Array<Instruction> {
+export function parseInput(input: string): CompilationUnitContext {
     const chars = new CharStream(input); // replace this with a FileStream as required
     let lexer = new CLexer(chars);
     let tokenStream = new CommonTokenStream(lexer);
     let parser = new CParser(tokenStream);
 
     // Parse the input, where `compilationUnit` is whatever entry point you defined
-    let tree = parser.compilationUnit();
-
-    // Use the visitor entry point
-    return tree.accept(new CompilationUnitVisitor());
+    return parser.compilationUnit();
 }
 
-compile(`;
+parseInput(`;
 
 int a = 2;
 
