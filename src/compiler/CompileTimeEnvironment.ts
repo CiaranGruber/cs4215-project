@@ -18,6 +18,9 @@ class CSymbol {
         this.pointer_depth = pointer_depth;
     }
 
+    /**
+     * Gets the type representing the C symbol
+     */
     get type() {
         return this._type;
     }

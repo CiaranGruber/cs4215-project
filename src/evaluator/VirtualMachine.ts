@@ -76,6 +76,10 @@ export class LdInstruction extends Instruction {
         super(VMTag.LD);
         this.position = position;
     }
+
+    public run_instruction(virtual_machine: VirtualMachine) {
+        throw new Error("LDInstruction not implemented");
+    }
 }
 
 /**

@@ -8,8 +8,7 @@
 
 import {CharStream, CommonTokenStream} from 'antlr4';
 import CLexer from "./antlr_gen/CLexer.js"; // Had to add .js - This is a hack
-import CParser, {CompilationUnitContext} from "./antlr_gen/CParser.js";
-import CompilationUnitVisitor from "../compiler/CompilationUnitVisitor";
+import CParser, {CompilationUnitContext, DirectDeclaratorContext} from "./antlr_gen/CParser.js";
 
 export function parseInput(input: string): CompilationUnitContext {
     const chars = new CharStream(input); // replace this with a FileStream as required
@@ -21,18 +20,8 @@ export function parseInput(input: string): CompilationUnitContext {
     return parser.compilationUnit();
 }
 
-parseInput(`;
-
-int a = 2;
+const compilation = parseInput(`int a = 2;
 
 int main() {
-    int i, sum = 0;
-       
-    for ( i = 1; i <= LAST; i++ ) {
-        sum += i;
-    } /*-for-*/
-    printf("sum = %d\\n", sum);
-
     return 0;
-}
-`);
+}`);

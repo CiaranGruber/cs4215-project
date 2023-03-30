@@ -56,7 +56,7 @@ genericAssociation
 postfixExpression
     :
     (   primaryExpression
-    |   '__extension__'? '(' typeName ')' '{' initializerList ','? '}'
+    |   '__extension__'? '(' typeName ')' '{' initialiserList ','? '}'
     )
     ('[' expression ']'
     | '(' argumentExpressionList? ')'
@@ -152,7 +152,19 @@ constantExpression
     ;
 
 declaration
-    :   declarationSpecifiers initDeclaratorList? ';'
+    /*
+        Original definition of declaration as specified by C spec has initDeclaratorList as an optional component
+        thereby allowing a type to be declared without initialising said type. This is used primarily as an option for
+        function prototypes as well as to allow empty declarations however this adds overly massive complexity to the
+        parser and would prevent a simple EBNF from accurately parsing a file
+
+        For example, how does the parser determine if 'a;' refers to either an expression (with the variable a) or
+        an empty declaration (such as 'int;') without knowing the context as to if 'a' is a typedef or a variable.
+
+        An alternative is to disallow typedef names however that is a much more drastic measure to allow a bit of
+        syntactic sugar
+    */
+    :   declarationSpecifiers initDeclaratorList ';'
     |   staticAssertDeclaration
     ;
 
@@ -177,7 +189,7 @@ initDeclaratorList
     ;
 
 initDeclarator
-    :   declarator ('=' initializer)?
+    :   declarator ('=' initialiser)?
     ;
 
 storageClassSpecifier
@@ -390,13 +402,13 @@ typedefName
     :   Identifier
     ;
 
-initializer
+initialiser
     :   assignmentExpression
-    |   '{' initializerList ','? '}'
+    |   '{' initialiserList ','? '}'
     ;
 
-initializerList
-    :   designation? initializer (',' designation? initializer)*
+initialiserList
+    :   designation? initialiser (',' designation? initialiser)*
     ;
 
 designation
@@ -499,11 +511,14 @@ externalDeclaration
     ;
 
 functionDefinition
-    :   declarationSpecifiers? declarator declarationList? compoundStatement
-    ;
+    /*
+        Original definition style is as follows:
+        declarationSpecifiers? declarator declarationList? compoundStatement
 
-declarationList
-    :   declaration+
+        declarationList? has been removed as programming using K&R style (described below) is not necessary to add
+        and may be removed in future version of the C spec (such as C20)
+    */
+    :   declarationSpecifiers? declarator compoundStatement
     ;
 
 Auto : 'auto';

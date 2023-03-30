@@ -68,8 +68,8 @@ import { TypeNameContext } from "./CParser";
 import { AbstractDeclaratorContext } from "./CParser";
 import { DirectAbstractDeclaratorContext } from "./CParser";
 import { TypedefNameContext } from "./CParser";
-import { InitializerContext } from "./CParser";
-import { InitializerListContext } from "./CParser";
+import { InitialiserContext } from "./CParser";
+import { InitialiserListContext } from "./CParser";
 import { DesignationContext } from "./CParser";
 import { DesignatorListContext } from "./CParser";
 import { DesignatorContext } from "./CParser";
@@ -90,7 +90,6 @@ import { CompilationUnitContext } from "./CParser";
 import { TranslationUnitContext } from "./CParser";
 import { ExternalDeclarationContext } from "./CParser";
 import { FunctionDefinitionContext } from "./CParser";
-import { DeclarationListContext } from "./CParser";
 
 
 /**
@@ -749,25 +748,25 @@ export default class CListener extends ParseTreeListener {
 	 */
 	exitTypedefName?: (ctx: TypedefNameContext) => void;
 	/**
-	 * Enter a parse tree produced by `CParser.initializer`.
+	 * Enter a parse tree produced by `CParser.initialiser`.
 	 * @param ctx the parse tree
 	 */
-	enterInitializer?: (ctx: InitializerContext) => void;
+	enterInitialiser?: (ctx: InitialiserContext) => void;
 	/**
-	 * Exit a parse tree produced by `CParser.initializer`.
+	 * Exit a parse tree produced by `CParser.initialiser`.
 	 * @param ctx the parse tree
 	 */
-	exitInitializer?: (ctx: InitializerContext) => void;
+	exitInitialiser?: (ctx: InitialiserContext) => void;
 	/**
-	 * Enter a parse tree produced by `CParser.initializerList`.
+	 * Enter a parse tree produced by `CParser.initialiserList`.
 	 * @param ctx the parse tree
 	 */
-	enterInitializerList?: (ctx: InitializerListContext) => void;
+	enterInitialiserList?: (ctx: InitialiserListContext) => void;
 	/**
-	 * Exit a parse tree produced by `CParser.initializerList`.
+	 * Exit a parse tree produced by `CParser.initialiserList`.
 	 * @param ctx the parse tree
 	 */
-	exitInitializerList?: (ctx: InitializerListContext) => void;
+	exitInitialiserList?: (ctx: InitialiserListContext) => void;
 	/**
 	 * Enter a parse tree produced by `CParser.designation`.
 	 * @param ctx the parse tree
@@ -968,15 +967,5 @@ export default class CListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFunctionDefinition?: (ctx: FunctionDefinitionContext) => void;
-	/**
-	 * Enter a parse tree produced by `CParser.declarationList`.
-	 * @param ctx the parse tree
-	 */
-	enterDeclarationList?: (ctx: DeclarationListContext) => void;
-	/**
-	 * Exit a parse tree produced by `CParser.declarationList`.
-	 * @param ctx the parse tree
-	 */
-	exitDeclarationList?: (ctx: DeclarationListContext) => void;
 }
 

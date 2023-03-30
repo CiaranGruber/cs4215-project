@@ -68,8 +68,8 @@ import { TypeNameContext } from "./CParser";
 import { AbstractDeclaratorContext } from "./CParser";
 import { DirectAbstractDeclaratorContext } from "./CParser";
 import { TypedefNameContext } from "./CParser";
-import { InitializerContext } from "./CParser";
-import { InitializerListContext } from "./CParser";
+import { InitialiserContext } from "./CParser";
+import { InitialiserListContext } from "./CParser";
 import { DesignationContext } from "./CParser";
 import { DesignatorListContext } from "./CParser";
 import { DesignatorContext } from "./CParser";
@@ -90,7 +90,6 @@ import { CompilationUnitContext } from "./CParser";
 import { TranslationUnitContext } from "./CParser";
 import { ExternalDeclarationContext } from "./CParser";
 import { FunctionDefinitionContext } from "./CParser";
-import { DeclarationListContext } from "./CParser";
 
 
 /**
@@ -492,17 +491,17 @@ export default class CVisitor<Result> extends ParseTreeVisitor<Result> {
 	 */
 	visitTypedefName?: (ctx: TypedefNameContext) => Result;
 	/**
-	 * Visit a parse tree produced by `CParser.initializer`.
+	 * Visit a parse tree produced by `CParser.initialiser`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitInitializer?: (ctx: InitializerContext) => Result;
+	visitInitialiser?: (ctx: InitialiserContext) => Result;
 	/**
-	 * Visit a parse tree produced by `CParser.initializerList`.
+	 * Visit a parse tree produced by `CParser.initialiserList`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitInitializerList?: (ctx: InitializerListContext) => Result;
+	visitInitialiserList?: (ctx: InitialiserListContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CParser.designation`.
 	 * @param ctx the parse tree
@@ -623,11 +622,5 @@ export default class CVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitFunctionDefinition?: (ctx: FunctionDefinitionContext) => Result;
-	/**
-	 * Visit a parse tree produced by `CParser.declarationList`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitDeclarationList?: (ctx: DeclarationListContext) => Result;
 }
 

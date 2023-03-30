@@ -3,6 +3,7 @@
 
 # Node.js imported modules
 node_modules
+build
 
 # User-specific stuff
 .idea/**/workspace.xml
