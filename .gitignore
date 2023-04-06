@@ -4,6 +4,7 @@
 # Node.js imported modules
 node_modules
 build
+old_src
 
 # User-specific stuff
 .idea/**/workspace.xml
