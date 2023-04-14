@@ -7,10 +7,11 @@
  * By Ciaran Gruber
  */
 
-import HeapDataView from "../HeapDataView";
-import CMemoryTag, {CMemoryTagValue} from "./CMemoryTag";
-import {SegmentationFaultError} from "../RestrictedHeap";
+import HeapDataView from "../../HeapDataView";
+import {CMemoryTagValue} from "./CMemoryTag";
+import {SegmentationFaultError} from "../../RestrictedHeap";
 import MallocData from "./MallocData";
+import PointerView from "./PointerView";
 
 
 /**
@@ -18,14 +19,13 @@ import MallocData from "./MallocData";
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>4 bytes - next free address</li>
+ *     <li>Pointer.byte_length - next free address</li>
  *     <li>MallocData.byte_length - internal data</li>
  * </ul>
  */
 export default class EmptyMalloc {
-    private static readonly next_length = 4;
     private static readonly next_offset = 0;
-    private static readonly base_offset = EmptyMalloc.next_offset + EmptyMalloc.next_length;
+    private static get base_offset() { return EmptyMalloc.next_offset + PointerView.byte_length }
     private data: HeapDataView;
 
     private constructor(data: HeapDataView) {
@@ -43,11 +43,11 @@ export default class EmptyMalloc {
      * The size required to store an empty malloc value
      */
     public static get byte_length() {
-        return MallocData.byte_length + this.next_length;
+        return PointerView.byte_length + MallocData.byte_length;
     }
 
     private get malloc_data(): MallocData {
-        return MallocData.from_existing(new HeapDataView(this.data, EmptyMalloc.base_offset, MallocData.byte_length));
+        return MallocData.from_existing(this.data.subset(EmptyMalloc.base_offset, MallocData.byte_length));
     }
 
     /**
@@ -57,11 +57,16 @@ export default class EmptyMalloc {
         return this.malloc_data.size;
     }
 
+    private get next_view(): PointerView {
+        return PointerView.from_existing(this.data.subset(EmptyMalloc.next_offset, EmptyMalloc.byte_length),
+            true);
+    }
+
     /**
      * Gets the pointer to the next available space
      */
     public get next(): number {
-        return this.data.get_value(EmptyMalloc.next_offset, EmptyMalloc.next_length).getInt32(0);
+        return this.next_view.address;
     }
 
     /**
@@ -69,11 +74,7 @@ export default class EmptyMalloc {
      * @param next The next address available
      */
     public set next(next: number) {
-        // Get value
-        const value = new ArrayBuffer(EmptyMalloc.next_length);
-        new DataView(value).setInt32(0, next);
-        // Set the value in the heap
-        this.data.set_value(value, EmptyMalloc.next_offset, true);
+        this.next_view.address = next;
     }
 
     /**
@@ -89,7 +90,7 @@ export default class EmptyMalloc {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
         // Set base information
-        MallocData.allocate_value(new HeapDataView(empty_malloc.data, EmptyMalloc.base_offset, MallocData.byte_length),
+        MallocData.allocate_value(empty_malloc.data.subset(EmptyMalloc.base_offset, MallocData.byte_length),
             CMemoryTagValue.MALLOC_EMPTY, size_available);
         // Set next address
         empty_malloc.next = next_address;
@@ -99,7 +100,7 @@ export default class EmptyMalloc {
     }
 
     /**
-     * Determines whether a set of data is a MallocVar instance
+     * Determines whether a set of data is a EmptyMalloc instance
      * @param view The data view
      */
     public static is_instance(view: HeapDataView): boolean {

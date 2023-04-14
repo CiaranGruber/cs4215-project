@@ -44,15 +44,15 @@ export default class BitArray {
     }
 
     /**
-     * Prints the BitArray by printing all the bytes in a list format
+     * Gets the BitArray in string format by showing all the bytes in a list format
      */
-    public print() {
+    public to_string(): string {
         let string = "";
         const buffer_to_print = this._buffer.buffer;
         for (let i = 0; i < this._buffer.byteLength; i++) {
             string += bytes_to_string(new DataView(buffer_to_print, this._buffer.byteOffset + i, 1));
         }
-        console.log(string);
+        return string;
     }
 
     /**
@@ -67,6 +67,15 @@ export default class BitArray {
         // Test if bit is set
         let mask = 1 << (7 - bit_to_get);
         return (this._buffer.getUint8(byte_to_get) & mask) != 0;
+    }
+
+    /**
+     * Updates the state of a bit to match the boolean value
+     * @param bit_offset The offset of the bit to update
+     * @param bit_state The new state to update the bit to
+     */
+    public update_bit(bit_offset: number, bit_state: boolean) {
+        bit_state ? this.set_bit(bit_offset) : this.clear_bit(bit_offset);
     }
 
     /**

@@ -8,22 +8,28 @@
  */
 
 import {BuiltInTypeSpecifierType} from "./BuiltInTypeSpecifierType";
-import TypeSpecifier, {BuiltInTypeSpecifier, TypeSpecifierType} from "../TypeSpecifier";
+import {BuiltInMultisetDescription} from "./BuiltInMultisetDescription";
+import GenericTypeCaster from "../../type_casting/GenericTypeCaster";
 
 /**
  * A multiset used to match types to a number of acceptable variations
  */
 export default class BuiltInTypeMultiset {
-    private type_size: number;
     private variations: Array<Map<BuiltInTypeSpecifierType, number>>;
+    private descriptors: Set<BuiltInMultisetDescription>;
+    public readonly caster: GenericTypeCaster;
+    private readonly type_size: number;
 
     /**
      * Constructs a new type multiset
      * @param type_size The size of the type
+     * @param caster The type caster to use to cast objects to this type
      */
-    constructor(type_size: number) {
+    constructor(type_size: number, caster: GenericTypeCaster) {
+        this.descriptors = new Set<BuiltInMultisetDescription>();
+        this.variations = [];
         this.type_size = type_size;
-        this.variations = new Array<Map<BuiltInTypeSpecifierType, number>>();
+        this.caster = caster;
     }
 
     /**
@@ -35,29 +41,26 @@ export default class BuiltInTypeMultiset {
     }
 
     /**
-     * Casts the value in the DataView to a new type specified by the type specifier
-     * @param type The type to cast the value to
-     * @param data_view The view of the array buffer used to cast
+     * Adds the given descriptor to the multiset
+     * @param descriptor The descriptor used to describe the multiset
      */
-    public static cast_to(type: TypeSpecifier, data_view: DataView): ArrayBuffer {
-        switch (type.type) {
-            case TypeSpecifierType.BUILT_IN_MULTISET:
-                const cast_to = (type as BuiltInTypeSpecifier).type_multiset;
-                // If casting size is smaller, ignore the left-hand side
-                if (data_view.byteLength > cast_to.type_size) {
-                    const end_offset = data_view.byteOffset + data_view.byteLength;
-                    const start_offset = end_offset - cast_to.type_size;
-                    return data_view.buffer.slice(start_offset, end_offset);
-                }
-                // If the cast size is larger, pad left
-                const new_buffer = new ArrayBuffer(cast_to.type_size);
-                const start_offset = new_buffer.byteLength - data_view.byteLength;
-                // Copy to new buffer
-                new Uint8Array(new_buffer, start_offset).set(new Uint8Array(data_view.buffer,
-                    data_view.byteOffset));
-                return new_buffer;
-        }
-        throw new InvalidCastError("Failed to cast to the required type");
+    public add_descriptor(descriptor: BuiltInMultisetDescription) {
+        this.descriptors.add(descriptor);
+    }
+
+    /**
+     * Gets whether the multiset is described using the given descriptor
+     * @param descriptor The descriptor to test for
+     */
+    public is_described_as(descriptor: BuiltInMultisetDescription) {
+        return this.descriptors.has(descriptor);
+    }
+
+    /**
+     * Gets the size of the data associated with the type
+     */
+    public get data_size() {
+        return this.type_size;
     }
 
     /**

@@ -1,7 +1,7 @@
 /**
  * TypeValidator
  *
- * Validates a set of type specifiers and returns a single type specifier instance as is required
+ * Validates a set of type specifiers and returns a single type specifier instance as is required.
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

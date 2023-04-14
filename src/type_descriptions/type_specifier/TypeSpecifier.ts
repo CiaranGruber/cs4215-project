@@ -9,6 +9,7 @@
 
 import {BuiltInTypeSpecifierType} from "./built_in_types/BuiltInTypeSpecifierType";
 import BuiltInTypeMultiset from "./built_in_types/BuiltInTypeMultiset";
+import GenericTypeCaster from "../type_casting/GenericTypeCaster";
 
 /**
  * Determines the type of type specifier. May include built-in types or user-defined types such as structs or unions
@@ -35,6 +36,16 @@ export default abstract class TypeSpecifier {
     protected constructor(type: TypeSpecifierType) {
         this.type = type;
     }
+
+    /**
+     * Gets the size of the data associated with the type specifier
+     */
+    public abstract get data_size(): number;
+
+    /**
+     * Gets the object used to cast values to the given type
+     */
+    public abstract get caster(): GenericTypeCaster;
 }
 
 /**
@@ -47,6 +58,14 @@ export class BuiltInTypeSpecifier extends TypeSpecifier {
         super(TypeSpecifierType.BUILT_IN_MULTISET);
         this.type_multiset = type_multiset;
     }
+
+    public get caster() {
+        return this.type_multiset.caster;
+    }
+
+    public get data_size(): number {
+        return this.type_multiset.data_size;
+    }
 }
 
 /**
@@ -58,6 +77,28 @@ export class BuiltInTypeSpecifierEnum extends TypeSpecifier {
     public constructor(type: BuiltInTypeSpecifierType) {
         super(TypeSpecifierType.BUILT_IN_ENUM);
         this.type_name = type;
+    }
+
+    public get data_size(): number {
+        throw new UnknownSizeError("The size for a BuiltInTypeSpecifierEnum cannot be determined");
+    }
+
+    public get caster(): GenericTypeCaster {
+        throw new InvalidSpecifierError("Casting to the BuiltInTypeSpecifierEnum is not allowed");
+    }
+}
+
+/**
+ * Thrown when the size of a type specifier cannot be determined
+ */
+export class UnknownSizeError extends Error {
+    /**
+     * Constructs a new UnknownSizeError instance
+     * @param message The message given along with the error
+     */
+    constructor(message) {
+        super(message);
+        this.name = "UnknownSizeError";
     }
 }
 

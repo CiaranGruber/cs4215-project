@@ -8,7 +8,7 @@
 
 import {CharStream, CommonTokenStream} from 'antlr4';
 import CLexer from "./antlr_gen/CLexer.js"; // Had to add .js - This is a hack
-import CParser, {CompilationUnitContext, DirectDeclaratorContext} from "./antlr_gen/CParser.js";
+import CParser, {CompilationUnitContext} from "./antlr_gen/CParser.js";
 
 export function parseInput(input: string): CompilationUnitContext {
     const chars = new CharStream(input); // replace this with a FileStream as required

@@ -9,15 +9,17 @@
 
 import RestrictedHeap, {SegmentationFaultError} from "./RestrictedHeap";
 import HeapDataView from "./HeapDataView";
-import MallocData from "./views/MallocData";
-import EmptyMalloc from "./views/EmptyMalloc";
-import MallocVar from "./views/MallocVar";
+import EmptyMalloc from "./views/base/EmptyMalloc";
+import MallocVar from "./views/base/MallocVar";
+import Stack from "./views/runtime_stack/Stack";
+import MemoryHandler, {MemoryCaller, UnknownCallerError} from "./MemoryHandler";
+import ImmutableDataView from "./ImmutableDataView";
 
 /**
  * The object used to represent the memory in C
  */
-export default class CMemory {
-    private base_heap: RestrictedHeap;
+export default class CMemory implements MemoryHandler {
+    private readonly base_heap: RestrictedHeap;
     private stack_free: number;
     private end_dynamic_mem: number;
     private malloc_free: number;
@@ -28,12 +30,14 @@ export default class CMemory {
      */
     constructor(size: number) {
         this.base_heap = new RestrictedHeap(size);
-        this.stack_free = 0;
         this.malloc_free = size - 1;
         this.end_dynamic_mem = size - 1;
         // Allocate empty value
         EmptyMalloc.allocate_value(this.get_view_before(this.malloc_free, EmptyMalloc.byte_length),
             -1, -1);
+        // Allocate stack
+        Stack.allocate_value(new HeapDataView(this.base_heap, 0, Stack.fixed_byte_length), this);
+        this.stack_free = Stack.fixed_byte_length;
     }
 
     /**
@@ -63,6 +67,17 @@ export default class CMemory {
      */
     public get middle_memory_free() {
         return this.end_dynamic_mem - this.stack_free + 1;
+    }
+
+    private get stack_view(): HeapDataView {
+        return new HeapDataView(this.base_heap, 0, this.stack_free);
+    }
+
+    /**
+     * Gets the C stack
+     */
+    public get stack(): Stack {
+        return Stack.from_existing(this.stack_view, this);
     }
 
     /**
@@ -99,6 +114,24 @@ export default class CMemory {
     private get_view_before(address: number, length: number): HeapDataView {
         const offset = address - length + 1;
         return new HeapDataView(this.base_heap, offset, length);
+    }
+
+    /**
+     * Gets an immutable data view of the heap at the given offset and length
+     * @param byte_offset The byte offset to get the view for
+     * @param byte_length The byte length to get the view for
+     */
+    public get_data_view(byte_offset: number, byte_length: number): ImmutableDataView {
+        return this.base_heap.get_value(byte_offset, byte_length);
+    }
+
+    /**
+     * Gets a view of the heap at the given offset and length
+     * @param byte_offset The byte offset to get the view for
+     * @param byte_length The byte length to get the view for
+     */
+    public get_heap_view(byte_offset: number, byte_length: number): HeapDataView {
+        return new HeapDataView(this.base_heap, byte_offset, byte_length);
     }
 
     /**
@@ -166,8 +199,7 @@ export default class CMemory {
 
         // Allocate malloc variable
         const data_view = this.get_view_before(start_address, memory_to_consume);
-        const malloc_var = MallocVar.allocate_value(data_view, memory_to_consume - MallocVar.fixed_byte_length,
-            next_pointer);
+        const malloc_var = MallocVar.allocate_value(data_view, memory_to_consume - MallocVar.fixed_byte_length);
         return malloc_var.data_view;
     }
 
@@ -230,6 +262,26 @@ export default class CMemory {
      */
     private deallocate(address: number, byte_length: number) {
         this.base_heap.set_protected(address, false, byte_length);
+    }
+
+    reduce_memory(memory_reduction: number, caller: MemoryCaller): HeapDataView {
+        if (caller !== MemoryCaller.STACK) {
+            throw new UnknownCallerError("The only viable memory caller for the CMemory is the Stack");
+        }
+
+        // Adjust memory
+        this.deallocate_from_stack(memory_reduction);
+        return this.stack_view;
+    }
+
+    request_memory(additional_memory_required: number, caller: MemoryCaller): HeapDataView {
+        if (caller !== MemoryCaller.STACK) {
+            throw new UnknownCallerError("The only viable memory caller for the CMemory is the Stack");
+        }
+
+        // Adjust memory
+        this.allocate_on_stack(additional_memory_required);
+        return this.stack_view;
     }
 }
 

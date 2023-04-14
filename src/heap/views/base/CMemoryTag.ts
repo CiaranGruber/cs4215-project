@@ -1,10 +1,24 @@
-import HeapDataView from "../HeapDataView";
-import CMemory from "../CMemory";
-import {SegmentationFaultError} from "../RestrictedHeap";
+/**
+ * CMemoryTag
+ *
+ * Represents a tag for a value as well as the specific
+ * Created for CS4215 term project
+ *
+ * By Ciaran Gruber
+ */
+
+import HeapDataView from "../../HeapDataView";
+import {SegmentationFaultError} from "../../RestrictedHeap";
+import UInt8 from "../data/UInt8";
 
 export enum CMemoryTagValue {
     MALLOC_VAR,
-    MALLOC_EMPTY
+    MALLOC_EMPTY,
+    REFERENCE_TYPE,
+    BUILT_IN_TYPE,
+    STRUCT_TYPE,
+    ENUM_TYPE,
+    EMPTY_ENVIRONMENT
 }
 
 /**
@@ -16,24 +30,27 @@ export enum CMemoryTagValue {
  * </ul>
  */
 export default class CMemoryTag {
+    private static readonly tag_offset = 0;
+    private static readonly tag_length = UInt8.byte_length;
     private tag_data: HeapDataView;
+    /**
+     * The length of data used to represent a memory tag
+     */
+    public static readonly byte_length = UInt8.byte_length;
 
     private constructor(tag: HeapDataView) {
         this.tag_data = tag;
     }
 
-    /**
-     * The length of data used to represent a memory tag
-     */
-    public static get byte_length() {
-        return 1;
+    private get tag_view(): UInt8 {
+        return new UInt8(this.tag_data.subset(CMemoryTag.tag_offset, CMemoryTag.tag_length), true);
     }
 
     /**
      * Gets the tag associated with the given CMemoryTag
      */
     public get tag(): CMemoryTagValue {
-        return this.tag_data.get_value(0, CMemoryTag.byte_length).getUint8(0);
+        return this.tag_view.value;
     }
 
     /**
@@ -42,9 +59,7 @@ export default class CMemoryTag {
      * @private
      */
     private set tag(value: CMemoryTagValue) {
-        const value_buffer = new ArrayBuffer(1);
-        new DataView(value_buffer).setUint8(0, value);
-        this.tag_data.set_value(value_buffer, 0, true);
+        this.tag_view.value = value;
     }
 
     /**

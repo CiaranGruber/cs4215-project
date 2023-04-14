@@ -7,6 +7,8 @@
  * By Ciaran Gruber
  */
 
+import BitArray from "./BitArray";
+
 /**
  * Wraps a given DataView class to remove access to the ability to set data
  */
@@ -27,10 +29,10 @@ export default class ImmutableDataView implements DataView {
     constructor(buffer: ArrayBuffer);
 
     constructor(value: DataView | ArrayBuffer) {
-        if (value instanceof DataView) {
-            this.data_view = value;
-        } else {
+        if (value instanceof ArrayBuffer) {
             this.data_view = new DataView(value);
+        } else {
+            this.data_view = value;
         }
     }
 
@@ -94,6 +96,10 @@ export default class ImmutableDataView implements DataView {
 
     getUint8(byteOffset: number): number {
         return this.data_view.getUint8(byteOffset);
+    }
+
+    get_bit_state(bit_offset: number): boolean {
+        return new BitArray(this).is_set(bit_offset);
     }
 
     /**

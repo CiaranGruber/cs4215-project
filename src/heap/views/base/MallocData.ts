@@ -1,6 +1,7 @@
 import CMemoryTag, {CMemoryTagValue} from "./CMemoryTag";
-import HeapDataView from "../HeapDataView";
-import {SegmentationFaultError} from "../RestrictedHeap";
+import HeapDataView from "../../HeapDataView";
+import {SegmentationFaultError} from "../../RestrictedHeap";
+import Int32 from "../data/Int32";
 
 /**
  * Represents the data associated with all malloc-related data
@@ -12,20 +13,13 @@ import {SegmentationFaultError} from "../RestrictedHeap";
  * </ul>
  */
 export default class MallocData {
-    private static readonly size_length = 4;
     private static readonly size_offset = 0;
+    private static readonly size_length = Int32.byte_length;
     private static readonly tag_offset = MallocData.size_offset + MallocData.size_length;
     private data: HeapDataView;
 
     private constructor(data: HeapDataView) {
         this.data = data;
-    }
-
-    /**
-     * Gets the tag associated with the given MallocData
-     */
-    public get tag(): CMemoryTagValue {
-        return CMemoryTag.from_existing(new HeapDataView(this.data, MallocData.tag_offset, CMemoryTag.byte_length)).tag;
     }
 
     /**
@@ -36,10 +30,21 @@ export default class MallocData {
     }
 
     /**
+     * Gets the tag associated with the given MallocData
+     */
+    public get tag(): CMemoryTagValue {
+        return CMemoryTag.from_existing(this.data.subset(MallocData.tag_offset, CMemoryTag.byte_length)).tag;
+    }
+
+    public get size_view(): Int32 {
+        return new Int32(this.data.subset(MallocData.size_offset, MallocData.size_length), true)
+    }
+
+    /**
      * Gets the pointer to the next available space
      */
     public get size(): number {
-        return this.data.get_value(MallocData.size_offset, MallocData.size_length).getInt32(0);
+        return this.size_view.value;
     }
 
     /**
@@ -47,11 +52,7 @@ export default class MallocData {
      * @param size The size available
      */
     private set size(size: number) {
-        // Get value
-        const value = new ArrayBuffer(MallocData.size_length);
-        new DataView(value).setInt32(0, size);
-        // Set the value in the heap
-        this.data.set_value(value, MallocData.size_offset, true);
+        this.size_view.value = size;
     }
 
     /**
@@ -67,7 +68,7 @@ export default class MallocData {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
         // Set tag
-        CMemoryTag.allocate_value(new HeapDataView(view, this.tag_offset, CMemoryTag.byte_length), tag);
+        CMemoryTag.allocate_value(view.subset(this.tag_offset, CMemoryTag.byte_length), tag);
         // Set size
         malloc_data.size = size;
         // Protect values

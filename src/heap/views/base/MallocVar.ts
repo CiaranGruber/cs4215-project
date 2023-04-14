@@ -7,19 +7,18 @@
  * By Ciaran Gruber
  */
 
-import HeapDataView from "../HeapDataView";
+import HeapDataView from "../../HeapDataView";
 import {CMemoryTagValue} from "./CMemoryTag";
 import MallocData from "./MallocData";
-import {SegmentationFaultError} from "../RestrictedHeap";
+import {SegmentationFaultError} from "../../RestrictedHeap";
 
 /**
  * Represents the data associated with allocated heap memory
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>4 bytes - size</li>
  *     <li>MallocData.byte_length - internal data</li>
- *     <li>remaining bytes - data</li>
+ *     <li>x bytes - data</li>
  * </ul>
  */
 export default class MallocVar {
@@ -53,30 +52,29 @@ export default class MallocVar {
     }
 
     private get malloc_data(): MallocData {
-        return MallocData.from_existing(new HeapDataView(this.view, MallocVar.base_offset, MallocData.byte_length));
+        return MallocData.from_existing(this.view.subset(MallocVar.base_offset, MallocData.byte_length));
     }
 
     /**
      * Gets the HeapDataView instance specifically for the malloc data
      */
     public get data_view(): HeapDataView {
-        return new HeapDataView(this.view, MallocVar.data_offset, this.data_size);
+        return this.view.subset(MallocVar.data_offset, this.data_size);
     }
 
     /**
      * Allocates a malloc variable in the given heap view
      * @param view The view used to change the heap values
-     * @param next_address The next address
      * @param data_size The size required for the malloc view
      */
-    public static allocate_value(view: HeapDataView, data_size: number, next_address: number): MallocVar {
+    public static allocate_value(view: HeapDataView, data_size: number): MallocVar {
         const malloc_var = new MallocVar(view);
         // Ensure the data is not already protected
         if (!view.is_not_protected(0, MallocVar.fixed_byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
         // Set base info
-        MallocData.allocate_value(new HeapDataView(view, MallocVar.base_offset, MallocData.byte_length),
+        MallocData.allocate_value(view.subset(MallocVar.base_offset, MallocData.byte_length),
             CMemoryTagValue.MALLOC_VAR, data_size + MallocVar.fixed_byte_length);
         // Protect info
         malloc_var.view.protect(MallocVar.base_offset, MallocVar.fixed_byte_length);
@@ -92,7 +90,7 @@ export default class MallocVar {
      * </p>
      * <p style="padding: 0px 10px 5px">
      *     Theoretically, as there is no bit ensuring it is reading a tag (rather than some other protected attribute),
-     *     it cannot ensure that it is not incorrectly reading a non-tag (Eg. Start of size attribute may be match with
+     *     it cannot ensure that it is not incorrectly reading a non-tag (E.g. Start of size attribute may be match with
      *     a malloc tag).
      * </p>
      * <p style="padding: 0px 10px 5px">
