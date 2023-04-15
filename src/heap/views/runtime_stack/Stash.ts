@@ -12,7 +12,7 @@ import MemoryHandler, {MemoryCaller} from "../../MemoryHandler";
 import {SegmentationFaultError} from "../../RestrictedHeap";
 import StashValue from "./StashValue";
 import CValue from "../../../explicit-control-evaluator/CValue";
-import Int32 from "../data/Int32";
+import Int32 from "../../../data_views/Int32";
 
 /**
  * Represents a view of the C stack memory
@@ -48,6 +48,10 @@ export default class Stash {
         return this.end_offset;
     }
 
+    public get is_empty() {
+        return this.curr_value_offset === -1;
+    }
+
     private get end_offset(): number {
         if (this.is_empty) {
             return Stash.fixed_byte_length;
@@ -77,7 +81,7 @@ export default class Stash {
      */
     public static allocate_value(view: HeapDataView, memory_handler: MemoryHandler): Stash {
         const stash = new Stash(view, memory_handler);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, Stash.fixed_byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -95,10 +99,6 @@ export default class Stash {
      */
     public static from_existing(view: HeapDataView, memory_handler: MemoryHandler): Stash {
         return new Stash(view, memory_handler);
-    }
-
-    public get is_empty() {
-        return this.curr_value_offset === -1;
     }
 
     /**

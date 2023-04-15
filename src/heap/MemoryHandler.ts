@@ -6,6 +6,7 @@ import HeapDataView from "./HeapDataView";
 export enum MemoryCaller {
     STACK,
     BLOCK_FRAME,
+    CALL_FRAME,
     STASH
 }
 

@@ -119,7 +119,7 @@ export default class Environment {
     public static allocate_value(view: HeapDataView, variables: Array<VariableDeclaration>): Environment {
         const environment = new Environment(view);
         const environment_size = this.size_required(variables);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, environment_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

@@ -1,7 +1,7 @@
 /**
  * EmptyMalloc
  *
- * Represents a set of data in the C Heap acting as an empty malloc value
+ * Represents a set of explicit_control_evaluator in the C Heap acting as an empty malloc value
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -11,21 +11,21 @@ import HeapDataView from "../../HeapDataView";
 import {CMemoryTagValue} from "./CMemoryTag";
 import {SegmentationFaultError} from "../../RestrictedHeap";
 import MallocData from "./MallocData";
-import PointerView from "./PointerView";
+import Pointer from "../../../data_views/Pointer";
 
 
 /**
- * Represents the data associated with empty malloc information
+ * Represents the explicit_control_evaluator associated with empty malloc information
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
  *     <li>Pointer.byte_length - next free address</li>
- *     <li>MallocData.byte_length - internal data</li>
+ *     <li>MallocData.byte_length - internal explicit_control_evaluator</li>
  * </ul>
  */
 export default class EmptyMalloc {
     private static readonly next_offset = 0;
-    private static get base_offset() { return EmptyMalloc.next_offset + PointerView.byte_length }
+    private static get base_offset() { return EmptyMalloc.next_offset + Pointer.byte_length }
     private data: HeapDataView;
 
     private constructor(data: HeapDataView) {
@@ -43,7 +43,7 @@ export default class EmptyMalloc {
      * The size required to store an empty malloc value
      */
     public static get byte_length() {
-        return PointerView.byte_length + MallocData.byte_length;
+        return Pointer.byte_length + MallocData.byte_length;
     }
 
     private get malloc_data(): MallocData {
@@ -57,8 +57,8 @@ export default class EmptyMalloc {
         return this.malloc_data.size;
     }
 
-    private get next_view(): PointerView {
-        return PointerView.from_existing(this.data.subset(EmptyMalloc.next_offset, EmptyMalloc.byte_length),
+    private get next_view(): Pointer {
+        return new Pointer(this.data.subset(EmptyMalloc.next_offset, EmptyMalloc.byte_length),
             true);
     }
 
@@ -66,7 +66,7 @@ export default class EmptyMalloc {
      * Gets the pointer to the next available space
      */
     public get next(): number {
-        return this.next_view.address;
+        return this.next_view.value;
     }
 
     /**
@@ -74,7 +74,7 @@ export default class EmptyMalloc {
      * @param next The next address available
      */
     public set next(next: number) {
-        this.next_view.address = next;
+        this.next_view.value = next;
     }
 
     /**
@@ -85,7 +85,7 @@ export default class EmptyMalloc {
      */
     public static allocate_value(view: HeapDataView, size_available: number, next_address: number): EmptyMalloc {
         const empty_malloc = new EmptyMalloc(view);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, EmptyMalloc.byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -100,8 +100,8 @@ export default class EmptyMalloc {
     }
 
     /**
-     * Determines whether a set of data is a EmptyMalloc instance
-     * @param view The data view
+     * Determines whether a set of explicit_control_evaluator is a EmptyMalloc instance
+     * @param view The explicit_control_evaluator view
      */
     public static is_instance(view: HeapDataView): boolean {
         if (view.byte_length < EmptyMalloc.byte_length) {

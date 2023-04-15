@@ -46,14 +46,14 @@ export default class TypeInformation {
     }
 
     /**
-     * Gets the data size of the given type
+     * Gets the explicit_control_evaluator size of the given type
      */
     public get data_size(): number {
         // Return pointer size if it is a pointer
         if (this.pointers.length > 0) {
             return LanguageContext.pointer_size;
         }
-        // Return size of the data
+        // Return size of the explicit_control_evaluator
         return this.declaration_specifier.specifier.data_size;
     }
 
@@ -65,9 +65,21 @@ export default class TypeInformation {
     }
 
     /**
-     * Casts the given data to the current type
+     * Gets the default value associated with the given type
+     */
+    public default_value(): ArrayBuffer {
+        // Return pointer cast
+        if (this.is_pointer) {
+            return new PointerCaster().default_value();
+        }
+        // Cast value accordingly
+        return this.declaration_specifier.specifier.caster.default_value();
+    }
+
+    /**
+     * Casts the given explicit_control_evaluator to the current type
      * @param src The source type information
-     * @param data_view The data that is to be cast
+     * @param data_view The explicit_control_evaluator that is to be cast
      */
     public cast_data(src: TypeInformation, data_view: ImmutableDataView): ArrayBuffer {
         // Return pointer cast
@@ -75,7 +87,7 @@ export default class TypeInformation {
             return new PointerCaster().cast_to(src, data_view);
         }
         // Cast value accordingly
-        return src.declaration_specifier.specifier.caster.cast_to(src, data_view);
+        return this.declaration_specifier.specifier.caster.cast_to(src, data_view);
     }
 
     /**

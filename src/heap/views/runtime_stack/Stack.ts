@@ -7,14 +7,16 @@
  * By Ciaran Gruber
  */
 import HeapDataView from "../../HeapDataView";
-import Blockframe from "./Blockframe";
+import BlockFrame from "./BlockFrame";
 import TypeInformation from "../../../type_descriptions/TypeInformation";
 import MemoryHandler, {MemoryCaller, UnknownCallerError} from "../../MemoryHandler";
 import VariableDeclaration from "../../../explicit-control-evaluator/VariableDeclaration";
 import {SegmentationFaultError} from "../../RestrictedHeap";
 import CValue from "../../../explicit-control-evaluator/CValue";
-import Int32 from "../data/Int32";
+import Int32 from "../../../data_views/Int32";
 import Stash from "./Stash";
+import FrameHeader from "./FrameHeader";
+import CallFrame from "./CallFrame";
 
 /**
  * Represents a view of the C stack memory
@@ -22,7 +24,7 @@ import Stash from "./Stash";
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
  *     <li>4 bytes - The current blockframe in the stack</li>
- *     <li>x × Blockframe.byte_length - The blockframes within the stack</li>
+ *     <li>x × Callframe.byte_length - The blockframes within the stack</li>
  * </ul>
  */
 export default class Stack implements MemoryHandler {
@@ -40,11 +42,11 @@ export default class Stack implements MemoryHandler {
      * Gets the stash from the current blockframe
      */
     public get stash(): Stash {
-        const blockframe = this.blockframe;
-        if (blockframe === undefined) {
+        const frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
+        if (frame === undefined) {
             throw new NothingOnStackError("No blockframes are currently on the stack (Therefore no stash)");
         }
-        return blockframe.stash;
+        return frame.stash;
     }
 
     /**
@@ -73,8 +75,8 @@ export default class Stack implements MemoryHandler {
 
     public declare_variable(name: string) {
         const curr_offset = this.curr_frame_offset;
-        const frame_size = Blockframe.byte_length(this.data.subset(curr_offset, Blockframe.fixed_byte_length));
-        const frame = Blockframe.from_existing(this.data.subset(curr_offset, frame_size), this);
+        const frame_size = BlockFrame.byte_length(this.data.subset(curr_offset, BlockFrame.fixed_byte_length));
+        const frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
         frame.environment.declare_variable(name);
     }
 
@@ -82,29 +84,55 @@ export default class Stack implements MemoryHandler {
         let curr_offset = this.curr_frame_offset;
         // Search for variable starting at the top frame
         while (curr_offset !== -1) {
-            const frame_size = Blockframe.byte_length(this.data.subset(curr_offset, Blockframe.fixed_byte_length));
-            const frame = Blockframe.from_existing(this.data.subset(curr_offset, frame_size), this);
+            const is_callframe = FrameHeader.is_callframe(this.data.subset(curr_offset, FrameHeader.byte_length));
+            let frame: CallFrame | BlockFrame;
+            if (is_callframe) {
+                const frame_size = CallFrame.byte_length(this.data.subset(curr_offset, CallFrame.fixed_byte_length));
+                frame = CallFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
+            } else {
+                const frame_size = BlockFrame.byte_length(this.data.subset(curr_offset, BlockFrame.fixed_byte_length));
+                frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
+            }
             const variable = frame.environment.get_variable(name);
             if (variable !== undefined) {
                 return variable;
             }
-            curr_offset = frame.prev_frame_offset;
+            // If it is a function call, get the variable from the global environment
+            curr_offset = is_callframe ? Stack.fixed_byte_length : frame.prev_frame_offset;
         }
         throw new VariableNotFoundError(`The variable ${name} was not found in any frames`);
+    }
+
+    private get top_is_call_frame(): boolean {
+        if (this.is_empty) {
+            return undefined;
+        }
+
+        return FrameHeader.is_callframe(this.data.subset(this.curr_frame_offset, FrameHeader.byte_length));
     }
 
     /**
      * Gets the top-most blockframe from the stack
      * @returns The top-most blockframe, else undefined
      */
-    private get blockframe(): Blockframe {
+    private get block_frame(): BlockFrame {
         if (this.is_empty) {
             return undefined;
         }
         const frame_offset = this.curr_frame_offset;
-        const blockframe_length = Blockframe.byte_length(this.data.subset(frame_offset, Blockframe.fixed_byte_length));
+        const frame_length = BlockFrame.byte_length(this.data.subset(frame_offset, BlockFrame.fixed_byte_length));
 
-        return Blockframe.from_existing(this.data.subset(frame_offset, blockframe_length), this);
+        return BlockFrame.from_existing(this.data.subset(frame_offset, frame_length), this);
+    }
+
+    private get call_frame(): CallFrame {
+        if (this.is_empty) {
+            return undefined;
+        }
+        const frame_offset = this.curr_frame_offset;
+        const frame_length = CallFrame.byte_length(this.data.subset(frame_offset, CallFrame.fixed_byte_length));
+
+        return CallFrame.from_existing(this.data.subset(frame_offset, frame_length), this);
     }
 
     /**
@@ -114,7 +142,7 @@ export default class Stack implements MemoryHandler {
      */
     public static allocate_value(view: HeapDataView, memory_handler: MemoryHandler): Stack {
         const stack = new Stack(view, memory_handler);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, Stack.fixed_byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -126,40 +154,73 @@ export default class Stack implements MemoryHandler {
     }
 
     /**
-     * Enters a scope by allocating a new blockframe with the given return type and declared variables
-     * @param return_type The return type of the blockframe
+     * Enters a block by allocating a new block frame with the given declared variables
      * @param declared_variables The variables that will be declared within the scope
      */
-    public enter_scope(return_type: TypeInformation, declared_variables: Array<VariableDeclaration>): Blockframe {
+    public enter_block(declared_variables: Array<VariableDeclaration>): void {
         // Get offset information
         const prev_frame_offset = this.curr_frame_offset;
         const next_frame_offset = this.data.byte_offset + this.data.byte_length;
         this.curr_frame_offset = next_frame_offset;
-        // Allocate new blockframe
-        const allocate_size = Blockframe.size_required(return_type, declared_variables);
+        // Allocate new call frame
+        const allocate_size = BlockFrame.size_required(declared_variables);
         this.data = this.memory_handler.request_memory(allocate_size, MemoryCaller.STACK);
         const allocated_view = this.data.subset(next_frame_offset, allocate_size);
-        return Blockframe.allocate_value(allocated_view, prev_frame_offset, return_type, declared_variables, this);
+        BlockFrame.allocate_value(allocated_view, prev_frame_offset, declared_variables, this);
     }
 
     /**
-     * Exits a scope by deallocating the remaining blockframe and adding the given CValue to the base stack if possible
+     * Enters a function call by allocating a new call frame with the given return type and declared variables
+     * @param return_type The return type of the call frame
+     * @param declared_variables The variables that will be declared within the scope
      */
-    public exit_scope(return_value: CValue) {
-        // Get the current top blockframe
-        let top_blockframe = this.blockframe;
-        if (top_blockframe === undefined) {
+    public enter_call(return_type: TypeInformation, declared_variables: Array<VariableDeclaration>): void {
+        // Get offset information
+        const prev_frame_offset = this.curr_frame_offset;
+        const next_frame_offset = this.data.byte_offset + this.data.byte_length;
+        this.curr_frame_offset = next_frame_offset;
+        // Allocate new call frame
+        const allocate_size = CallFrame.size_required(return_type, declared_variables);
+        this.data = this.memory_handler.request_memory(allocate_size, MemoryCaller.STACK);
+        const allocated_view = this.data.subset(next_frame_offset, allocate_size);
+        CallFrame.allocate_value(allocated_view, prev_frame_offset, return_type, declared_variables, this);
+    }
+
+    /**
+     * Exits a scope by deallocating the remaining frame and if it is a function, returning the last value on the stash
+     * or void
+     */
+    public exit_scope() {
+        // Get the current frame
+        const is_call_frame = this.top_is_call_frame;
+        if (is_call_frame === undefined) {
             throw new NothingOnStackError("Cannot exit scope when there is not blockframe currently present");
         }
-        // Cast the return value to an appropriate alternative value
-        return_value.cast_to(top_blockframe.return_type);
-        // Deallocate blockframe from memory
-        this.curr_frame_offset = top_blockframe.prev_frame_offset;
-        this.data = this.memory_handler.reduce_memory(top_blockframe.byte_length, MemoryCaller.STACK);
-        // Push return value onto stash if possible
-        top_blockframe = this.blockframe;
-        if (top_blockframe !== undefined) {
-            top_blockframe.stash.push(return_value);
+        const frame = is_call_frame ? this.call_frame : this.block_frame;
+        // Get return value to push onto stash if possible
+        let return_value: CValue;
+        if (is_call_frame) {
+            const return_type = (frame as CallFrame).return_type;
+            if (frame.stash.is_empty) {
+                return_value = new CValue(false, return_type, return_type.default_value());
+            } else {
+                return_value = frame.stash.pop();
+                return_value.cast_to(return_type);
+            }
+        }
+
+        // Move frame offset
+        this.curr_frame_offset = frame.prev_frame_offset;
+
+        // Deallocate frame from memory
+        this.data = this.memory_handler.reduce_memory(frame.byte_length, MemoryCaller.STACK);
+
+        // Push onto stash of previous frame
+        if (is_call_frame) {
+            const top_frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
+            if (top_frame !== undefined) {
+                top_frame.stash.push(return_value);
+            }
         }
     }
 
@@ -173,31 +234,33 @@ export default class Stack implements MemoryHandler {
     }
 
     reduce_memory(memory_reduction: number, caller: MemoryCaller): HeapDataView {
-        if (caller !== MemoryCaller.BLOCK_FRAME) {
-            throw new UnknownCallerError("The only viable memory caller for the Stack is a Blockframe");
+        if (caller !== MemoryCaller.BLOCK_FRAME && caller !== MemoryCaller.CALL_FRAME) {
+            throw new UnknownCallerError("The only viable memory caller for the Stack is a CallFrame or a BlockFrame");
         }
 
         // Check stash size limitations
-        const blockframe_size = this.blockframe.byte_length;
-        if (blockframe_size - memory_reduction < Blockframe.fixed_byte_length) {
-            throw new SegmentationFaultError("The size of a blockframe cannot be reduced by more than the minimum " +
-                "blockframe size");
+        const is_call_frame = this.top_is_call_frame;
+        const frame = is_call_frame ? this.call_frame : this.block_frame;
+        const frame_size = frame.byte_length;
+        const minimum_size = is_call_frame ? CallFrame.fixed_byte_length : BlockFrame.fixed_byte_length
+        if (frame_size - memory_reduction < minimum_size) {
+            throw new SegmentationFaultError("The size of a frame cannot be reduced by more than its fixed byte length");
         }
 
         // Adjust memory
         this.data = this.memory_handler.reduce_memory(memory_reduction, MemoryCaller.STACK);
-        return this.data.subset(this.curr_frame_offset, blockframe_size - memory_reduction);
+        return this.data.subset(this.curr_frame_offset, frame_size - memory_reduction);
     }
 
     request_memory(additional_memory_required: number, caller: MemoryCaller): HeapDataView {
-        if (caller !== MemoryCaller.BLOCK_FRAME) {
-            throw new UnknownCallerError("The only viable memory caller for the Stack is a Blockframe");
+        if (caller !== MemoryCaller.BLOCK_FRAME && caller !== MemoryCaller.CALL_FRAME) {
+            throw new UnknownCallerError("The only viable memory caller for the Stack is a CallFrame or a BlockFrame");
         }
 
         // Adjust memory
         this.data = this.memory_handler.request_memory(additional_memory_required, MemoryCaller.STACK);
-        return this.data.subset(this.curr_frame_offset,
-            this.blockframe.byte_length + additional_memory_required);
+        const frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
+        return this.data.subset(this.curr_frame_offset,frame.byte_length + additional_memory_required);
     }
 }
 

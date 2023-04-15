@@ -1,14 +1,14 @@
 import CMemoryTag, {CMemoryTagValue} from "./CMemoryTag";
 import HeapDataView from "../../HeapDataView";
 import {SegmentationFaultError} from "../../RestrictedHeap";
-import Int32 from "../data/Int32";
+import Int32 from "../../../data_views/Int32";
 
 /**
- * Represents the data associated with all malloc-related data
+ * Represents the explicit_control_evaluator associated with all malloc-related explicit_control_evaluator
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>4 bytes - size of data</li>
+ *     <li>4 bytes - size of explicit_control_evaluator</li>
  *     <li>CMemoryTag.byte_length - tag</li>
  * </ul>
  */
@@ -48,7 +48,7 @@ export default class MallocData {
     }
 
     /**
-     * Sets the size used by the malloc data
+     * Sets the size used by the malloc explicit_control_evaluator
      * @param size The size available
      */
     private set size(size: number) {
@@ -59,11 +59,11 @@ export default class MallocData {
      * Allocates a new MallocData instance within the associated HeapDataView
      * @param view The view to allocate the MallocData instance within
      * @param tag The tag to set for the MallocData
-     * @param size The size of the given data instance
+     * @param size The size of the given explicit_control_evaluator instance
      */
     public static allocate_value(view: HeapDataView, tag: CMemoryTagValue, size: number): MallocData {
         const malloc_data = new MallocData(view);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, MallocData.byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -78,8 +78,8 @@ export default class MallocData {
     }
 
     /**
-     * Determines whether a set of data is a MallocVar instance
-     * @param view The data view
+     * Determines whether a set of explicit_control_evaluator is a MallocVar instance
+     * @param view The explicit_control_evaluator view
      */
     public static is_instance(view: HeapDataView): boolean {
         if (view.byte_length < MallocData.byte_length) {

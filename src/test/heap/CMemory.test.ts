@@ -43,12 +43,12 @@ test('Allocating a value on the heap', () => {
     let view = memory.malloc(value_size);
     // Ensure space usage is accurate
     expect(memory.middle_memory_free).toBe(expected_mem_size - value_size - MallocVar.fixed_byte_length);
-    // Ensure all data is available for consumption
+    // Ensure all explicit_control_evaluator is available for consumption
     expect(view.is_not_protected(0, view.byte_length)).toBeTruthy();
     // Test second allocation
     view = memory.malloc(value_size);
     expect(memory.middle_memory_free).toBe(expected_mem_size - (value_size + MallocVar.fixed_byte_length) * 2);
-    // Ensure all data is available for consumption
+    // Ensure all explicit_control_evaluator is available for consumption
     expect(view.is_not_protected(0, view.byte_length)).toBeTruthy();
 });
 
@@ -98,4 +98,44 @@ test('Freeing values in the heap with complex merge', () => {
         memory.free(view3.byte_offset);
     }
     expect(memory.middle_memory_free).toBe(heap_free);
+});
+
+test('Defragmenting an empty but fragmented heap', () => {
+    LanguageContext.initialise_instance(true);
+    const memory_size = 128;
+    const value_size = 2;
+    const memory: CMemory = new CMemory(memory_size);
+    const expected_mem_size = memory_size - Stack.fixed_byte_length;
+    // Allocate and free memory in such a way as to fragment memory
+    let view0 = memory.malloc(value_size);
+    let view1 = memory.malloc(value_size * 3);
+    let view2 = memory.malloc(value_size);
+    memory.free(view0.byte_offset);
+    memory.free(view1.byte_offset);
+    memory.free(view2.byte_offset);
+    // Defragment memory
+    memory.defragment();
+    // Check memory management
+    expect(memory.middle_memory_free).toBe(expected_mem_size);
+});
+
+test('Defragmenting a heap with some allocated values', () => {
+    LanguageContext.initialise_instance(true);
+    const memory_size = 128;
+    const value_size = 8;
+    const memory: CMemory = new CMemory(memory_size);
+    // Allocate and free memory in such a way as to fragment memory with one block remaining
+    let view0 = memory.malloc(value_size);
+    let view1 = memory.malloc(value_size);
+    memory.malloc(value_size);
+    const middle_free = memory.middle_memory_free;
+    memory.free(view0.byte_offset);
+    memory.free(view1.byte_offset);
+    const memory_available_at_start = (value_size + MallocVar.fixed_byte_length) * 2;
+    // Defragment memory
+    memory.defragment();
+    // Attempt to allocate in the free space
+    memory.malloc(memory_available_at_start - MallocVar.fixed_byte_length);
+    // Ensure memory was allocated in the free space
+    expect(memory.middle_memory_free).toBe(middle_free);
 });

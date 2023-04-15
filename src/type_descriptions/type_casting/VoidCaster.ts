@@ -15,9 +15,12 @@ import ImmutableDataView from "../../heap/ImmutableDataView";
  * Used for casting objects to an integer type (including shorts/longs)
  */
 export default class VoidCaster extends GenericTypeCaster {
-    cast_to(src: TypeInformation, data: ImmutableDataView): ArrayBuffer {
-        // Allows casts from any type and will return data of 0 size
+    public cast_to(src: TypeInformation, data: ImmutableDataView): ArrayBuffer {
+        // Allows casts from any type and will return explicit_control_evaluator of 0 size
         return new ArrayBuffer(0);
     }
 
+    public default_value(): ArrayBuffer {
+        return new ArrayBuffer(0);
+    }
 }

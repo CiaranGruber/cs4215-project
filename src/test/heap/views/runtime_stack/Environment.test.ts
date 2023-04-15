@@ -8,9 +8,8 @@ import {
     BuiltInTypeSpecifierType
 } from "../../../../type_descriptions/type_specifier/built_in_types/BuiltInTypeSpecifierType";
 import DeclarationSpecification from "../../../../type_descriptions/DeclarationSpecification";
-import CValue from "../../../../explicit-control-evaluator/CValue";
 import VariableDeclaration from "../../../../explicit-control-evaluator/VariableDeclaration";
-import Int32 from "../../../../explicit-control-evaluator/views/data/Int32";
+import Int32 from "../../../../data_views/Int32";
 
 function get_base_return(): TypeInformation {
     const void_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.VOID));
@@ -22,10 +21,6 @@ function get_int_type(): TypeInformation {
     const int_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.INT));
     const declaration_specification = DeclarationSpecification.from_specifiers([int_specifier]);
     return new TypeInformation(declaration_specification, [], false);
-}
-
-function get_void_value(): CValue {
-    return new CValue(false, get_base_return(), new ArrayBuffer(0));
 }
 
 test('Storing and retrieving variables', () => {
@@ -41,16 +36,14 @@ test('Storing and retrieving variables', () => {
     // Create declaration
     const variable = new VariableDeclaration(get_int_type(), variable_name);
     // Enter scope with declaration
-    stack.enter_scope(get_base_return(), [variable]);
+    stack.enter_block([variable]);
     expect(() => stack.get_variable(variable_name)).toThrow(VariableNotFoundError);
 
     // Declare variable
     stack.declare_variable(variable_name);
     // Set variable
     const retrieved_value = stack.get_variable(variable_name);
-    const value_buffer = new ArrayBuffer(Int32.byte_length);
-    new Int32(new DataView(value_buffer)).value = value_to_set;
-    retrieved_value.set_value(memory, value_buffer);
+    retrieved_value.set_value(memory, Int32.create_buffer(value_to_set));
 
     // Retrieve value
     const second_variable = stack.get_variable(variable_name);
@@ -58,7 +51,7 @@ test('Storing and retrieving variables', () => {
     expect(value_found).toBe(value_to_set);
 
     // Clear memory
-    stack.exit_scope(get_void_value());
+    stack.exit_scope();
     expect(memory.middle_memory_free).toBe(maximum_space);
 });
 
@@ -75,16 +68,14 @@ test('Retrieving variables from parent scope', () => {
     // Create declaration
     const variable = new VariableDeclaration(get_int_type(), variable_name);
     // Create scope with variable
-    stack.enter_scope(get_base_return(), [variable]);
+    stack.enter_block([variable]);
     stack.declare_variable(variable_name);
-    stack.enter_scope(get_base_return(), []);
+    stack.enter_call(get_base_return(), []);
     // Set value from child scope
     const retrieved_value = stack.get_variable(variable_name);
-    const value_buffer = new ArrayBuffer(Int32.byte_length);
-    new Int32(new DataView(value_buffer)).value = value_to_set;
-    retrieved_value.set_value(memory, value_buffer);
+    retrieved_value.set_value(memory, Int32.create_buffer(value_to_set));
     // Exit scope
-    stack.exit_scope(get_void_value());
+    stack.exit_scope();
 
     // Retrieve value from parent scope
     const second_variable = stack.get_variable(variable_name);
@@ -92,6 +83,6 @@ test('Retrieving variables from parent scope', () => {
     expect(value_found).toBe(value_to_set);
 
     // Clear memory
-    stack.exit_scope(get_void_value());
+    stack.exit_scope();
     expect(memory.middle_memory_free).toBe(maximum_space);
 });

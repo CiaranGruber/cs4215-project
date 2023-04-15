@@ -12,7 +12,7 @@ import BuiltInTypeMultiset from "../../../../type_descriptions/type_specifier/bu
 import BuiltInMultisetManager from "../../../../type_descriptions/type_specifier/built_in_types/BuiltInMultisetManager";
 import {BuiltInTypeSpecifier} from "../../../../type_descriptions/type_specifier/TypeSpecifier";
 import {SegmentationFaultError} from "../../../RestrictedHeap";
-import UInt8 from "../../data/UInt8";
+import UInt8 from "../../../../data_views/UInt8";
 
 /**
  * Represents the information used for a built-in type specifier
@@ -61,7 +61,7 @@ export default class BuiltInTypeSpecifierView {
      */
     public static allocate_value(view: HeapDataView, type_specifier: BuiltInTypeSpecifier): BuiltInTypeSpecifierView {
         const type_info_view = new BuiltInTypeSpecifierView(view);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, this.byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

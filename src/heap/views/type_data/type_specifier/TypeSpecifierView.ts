@@ -16,7 +16,7 @@ import TypeSpecifier, {
     TypeSpecifierType
 } from "../../../../type_descriptions/type_specifier/TypeSpecifier";
 import BuiltInTypeSpecifierView from "./BuiltInTypeSpecifierView";
-import UInt16 from "../../data/UInt16";
+import UInt16 from "../../../../data_views/UInt16";
 
 /**
  * Represents a set of type information
@@ -92,7 +92,7 @@ export default class TypeSpecifierView {
     public static allocate_value(view: HeapDataView, type_specifier: TypeSpecifier): TypeSpecifierView {
         const type_info_view = new TypeSpecifierView(view);
         const total_size = TypeSpecifierView.fixed_byte_length;
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, total_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

@@ -10,18 +10,31 @@
 import {bytes_to_string} from "./RestrictedHeap";
 
 /**
- * Represents a type of data view that allows for individual bit manipulation
+ * Represents a type of explicit_control_evaluator view that allows for individual bit manipulation
  */
 export default class BitArray {
     private _buffer: DataView;
 
     /**
-     * Wraps the given buffer in the BitArrayView
-     * @param data_view The data view that the bit array is based upon
+     * Wraps the given buffer in a BitArray
+     * @param buffer The buffer that the bit array is based upon
      */
-    constructor(data_view: DataView) {
-        this._buffer = data_view;
+    constructor(buffer: ArrayBuffer);
+
+    /**
+     * Wraps the given view in the BitArray
+     * @param data_view The view that the bit array is based upon
+     */
+    constructor(data_view: DataView);
+
+    constructor(view: ArrayBuffer | DataView) {
+        if (view instanceof ArrayBuffer) {
+            this._buffer = new DataView(view);
+        } else {
+            this._buffer = view;
+        }
     }
+
     /**
      * Gets the ArrayBuffer associated with the given view
      */

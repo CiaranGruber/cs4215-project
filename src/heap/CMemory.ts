@@ -92,13 +92,13 @@ export default class CMemory implements MemoryHandler {
         // Allocate memory for stack value
         const old_free = this.stack_free;
         this.stack_free += size;
-        // Return data view of the allocated memory
+        // Return explicit_control_evaluator view of the allocated memory
         return new HeapDataView(this.base_heap, old_free, size);
     }
 
     /**
      * Deallocates the given memory from the stack to be utilised by other processes
-     * @param size The size of the data to deallocate
+     * @param size The size of the explicit_control_evaluator to deallocate
      */
     public deallocate_from_stack(size: number) {
         this.stack_free -= size;
@@ -117,7 +117,7 @@ export default class CMemory implements MemoryHandler {
     }
 
     /**
-     * Gets an immutable data view of the heap at the given offset and length
+     * Gets an immutable explicit_control_evaluator view of the heap at the given offset and length
      * @param byte_offset The byte offset to get the view for
      * @param byte_length The byte length to get the view for
      */
@@ -143,7 +143,7 @@ export default class CMemory implements MemoryHandler {
 
     /**
      * Allocates a new set of memory into the heap
-     * @param size The size of the data required
+     * @param size The size of the explicit_control_evaluator required
      */
     public malloc(size: number): HeapDataView {
         // Ensure variable can be freed
@@ -205,6 +205,9 @@ export default class CMemory implements MemoryHandler {
 
     /**
      * Frees a given address that was allocated within the heap
+     * Note: To reduce fragmentation, an additional Pointer.byte_length bytes could be stored in MallocData to the
+     * previous (consecutive) memory allocation. This would allow complete defragmentation when all memory is freed,
+     * however it does double the fixed_byte_length of Mallocced values
      * @param address The address to free
      */
     public free(address: number) {
@@ -252,6 +255,59 @@ export default class CMemory implements MemoryHandler {
         // Create empty variable
         EmptyMalloc.allocate_value(this.get_view_before(new_empty_address, EmptyMalloc.byte_length), new_space_available,
             next_pointer);
+    }
+
+    /**
+     * Reduces fragmentation of the allocated memory by combining any consecutive empty malloc pointers and arranges
+     * the next pointers such that they are more likely to be combined in the future
+     */
+    public defragment() {
+        // Get list of array pointers
+        const empty_pointers: Array<number> = []
+        let start_address = this.malloc_free;
+        let empty_malloc = EmptyMalloc.from_existing(this.get_view_before(start_address, EmptyMalloc.byte_length));
+        empty_pointers.push(start_address);
+        while (empty_malloc.next !== -1) {
+            start_address = empty_malloc.next;
+            empty_pointers.push(start_address);
+            empty_malloc = EmptyMalloc.from_existing(this.get_view_before(start_address, EmptyMalloc.byte_length));
+        }
+
+        // Order list by end of heap first
+        empty_pointers.sort((a, b) => b - a);
+        this.malloc_free = empty_pointers[0]; // Point malloc_free to first value
+
+        // Combine empty pointers if they are consecutive
+        let next_pointer = empty_pointers[0];
+        empty_malloc = EmptyMalloc.from_existing(this.get_view_before(next_pointer, EmptyMalloc.byte_length));
+        const size = empty_malloc.size;
+        let new_space_available = size === -1 ? EmptyMalloc.byte_length : size;
+        for (let i = 1; i < empty_pointers.length; i++) {
+            if (next_pointer - new_space_available === empty_pointers[i]) {
+                // Combine with existing values
+                empty_malloc = EmptyMalloc.from_existing(this.get_view_before(empty_pointers[i], EmptyMalloc.byte_length));
+                const size = empty_malloc.size;
+                new_space_available += size === -1 ? EmptyMalloc.byte_length : size;
+            } else { // Allocate existing pointer and start again
+                // Allocate running malloc
+                this.deallocate(next_pointer - new_space_available + 1, new_space_available);
+                EmptyMalloc.allocate_value(this.get_view_before(next_pointer, EmptyMalloc.byte_length),
+                    new_space_available, empty_pointers[i]);
+
+                // Start new pointer section
+                next_pointer = empty_pointers[i];
+                empty_malloc = EmptyMalloc.from_existing(this.get_view_before(next_pointer, EmptyMalloc.byte_length));
+                const size = empty_malloc.size;
+                new_space_available = size === -1 ? EmptyMalloc.byte_length : size;
+            }
+        }
+        // Allocate final malloc
+        this.deallocate(next_pointer - new_space_available + 1, new_space_available);
+        EmptyMalloc.allocate_value(this.get_view_before(next_pointer, EmptyMalloc.byte_length), -1,
+            -1);
+
+        // Set end_dynamic_mem to the last allocated empty malloc
+        this.end_dynamic_mem = next_pointer;
     }
 
     /**

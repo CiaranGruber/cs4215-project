@@ -12,10 +12,10 @@ import TypeInformation from "../../../type_descriptions/TypeInformation";
 import TypeInfoView from "../type_data/TypeInfoView";
 import {SegmentationFaultError} from "../../RestrictedHeap";
 import CValue from "../../../explicit-control-evaluator/CValue";
-import UInt16 from "../data/UInt16";
-import UInt32 from "../data/UInt32";
-import Int32 from "../data/Int32";
-import Bool from "../data/Bool";
+import UInt16 from "../../../data_views/UInt16";
+import UInt32 from "../../../data_views/UInt32";
+import Int32 from "../../../data_views/Int32";
+import Bool from "../../../data_views/Bool";
 
 /**
  * Represents a value stored within the stash in C memory
@@ -26,8 +26,8 @@ import Bool from "../data/Bool";
  *     <li>2 bytes - The size of the type information</li>
  *     <li>4 bytes - The size of the data</li>
  *     <li>4 bytes - The offset of the previous stash value</li>
- *     <li>TypeInfoView.byte_length - The type of the data represented</li>
- *     <li>x bytes - The data stored in the value</li>
+ *     <li>TypeInfoView.byte_length - The type of the StashValue represented</li>
+ *     <li>x bytes - The value stored in the StashValue</li>
  * </ul>
  */
 export default class StashValue {
@@ -40,7 +40,7 @@ export default class StashValue {
     private static readonly prev_offset_offset = StashValue.data_size_offset + StashValue.data_size_length;
     private static readonly prev_offset_length = Int32.byte_length;
     private static readonly type_info_offset = StashValue.prev_offset_offset + StashValue.prev_offset_length;
-    private get data_offset() { return StashValue.type_info_size_offset + this.type_info_size }
+    private get data_offset() { return StashValue.type_info_offset + this.type_info_size }
     private data: HeapDataView;
 
     private constructor(data: HeapDataView) {
@@ -135,7 +135,7 @@ export default class StashValue {
     }
 
     /**
-     * Gets the data view associated with the given stash value
+     * Gets the StashValue view associated with the given stash value
      */
     private get data_view(): HeapDataView {
         return this.data.subset(this.data_offset, this.data_size);
@@ -161,7 +161,7 @@ export default class StashValue {
         const type_info_size = TypeInfoView.size_required(variable.type_information);
         const data_size = variable.type_information.data_size;
         const total_size = StashValue.fixed_byte_length + type_info_size + data_size;
-        // Ensure the data is not already protected
+        // Ensure the StashValue is not already protected
         if (!view.is_not_protected(0, total_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -170,6 +170,7 @@ export default class StashValue {
         heap_variable.data_size = data_size;
         heap_variable.type_info_size = type_info_size;
         heap_variable.prev_offset = prev_stash_value;
+        heap_variable.data_view.set_value(variable.data);
         // Set information
         TypeInfoView.allocate_value(heap_variable.type_info_view, variable.type_information);
         // Protect information about the stash value

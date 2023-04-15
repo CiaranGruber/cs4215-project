@@ -11,14 +11,14 @@ import HeapDataView from "../../HeapDataView";
 import TypeInformation from "../../../type_descriptions/TypeInformation";
 import TypeInfoView from "../type_data/TypeInfoView";
 import {SegmentationFaultError} from "../../RestrictedHeap";
-import CString from "../data/CString";
+import CString from "../../../data_views/CString";
 import VariableDeclaration from "../../../explicit-control-evaluator/VariableDeclaration";
-import UInt8 from "../data/UInt8";
-import UInt16 from "../data/UInt16";
-import UInt32 from "../data/UInt32";
-import Bool from "../data/Bool";
+import UInt8 from "../../../data_views/UInt8";
+import UInt16 from "../../../data_views/UInt16";
+import UInt32 from "../../../data_views/UInt32";
+import Bool from "../../../data_views/Bool";
 import CValue from "../../../explicit-control-evaluator/CValue";
-import PointerDataView from "../../../explicit-control-evaluator/views/PointerDataView";
+import Pointer from "../../../data_views/Pointer";
 
 /**
  * Represents an environment variable
@@ -28,10 +28,10 @@ import PointerDataView from "../../../explicit-control-evaluator/views/PointerDa
  *     <li>1 byte - Whether the variable has been declared</li>
  *     <li>2 bytes - The size of the type information</li>
  *     <li>1 byte - The size of the name</li>
- *     <li>4 bytes - The size of the data</li>
+ *     <li>4 bytes - The size of the explicit_control_evaluator</li>
  *     <li>TypeInformation.byte_length - The type information of the variable</li>
  *     <li>x × CString.byte_length - Character array representing the name of the variable</li>
- *     <li>x bytes - The bytes for the variable data</li>
+ *     <li>x bytes - The bytes for the variable explicit_control_evaluator</li>
  * </ul>
  */
 export default class VariableMem {
@@ -107,10 +107,9 @@ export default class VariableMem {
      * Gets the value for the VariableMem
      */
     public get value(): CValue {
-        const pointer_size = PointerDataView.byte_length;
-        const pointer = new PointerDataView(new DataView(new ArrayBuffer(pointer_size)));
-        pointer.address = this.data_view.byte_offset;
-        return new CValue(true, this.type_info, pointer.view.referenced_buffer);
+        const value = new ArrayBuffer(Pointer.byte_length);
+        new Pointer(new DataView(value)).value = this.data_view.byte_offset;
+        return new CValue(true, this.type_info, value);
     }
 
     private get type_info_size_view(): UInt16 {
@@ -177,7 +176,7 @@ export default class VariableMem {
     }
 
     /**
-     * Gets the data view associated with the given variable
+     * Gets the explicit_control_evaluator view associated with the given variable
      */
     public get data_view(): HeapDataView {
         return this.data.subset(this.data_offset, this.data_size);
@@ -195,7 +194,7 @@ export default class VariableMem {
         const type_info_size = TypeInfoView.size_required(variable.type_information);
         const data_size = variable.type_information.data_size;
         const total_size = VariableMem.fixed_byte_length + type_info_size + name_size + data_size;
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, total_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -215,7 +214,7 @@ export default class VariableMem {
 
     /**
      * Gets the size of the variable from the variable header
-     * @param header_view Gets the data size from the given header view
+     * @param header_view Gets the explicit_control_evaluator size from the given header view
      */
     public static get_size(header_view: HeapDataView) {
         return VariableMem.from_existing(header_view).byte_length;

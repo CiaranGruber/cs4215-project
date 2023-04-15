@@ -13,12 +13,12 @@ import MallocData from "./MallocData";
 import {SegmentationFaultError} from "../../RestrictedHeap";
 
 /**
- * Represents the data associated with allocated heap memory
+ * Represents the explicit_control_evaluator associated with allocated heap memory
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>MallocData.byte_length - internal data</li>
- *     <li>x bytes - data</li>
+ *     <li>MallocData.byte_length - internal explicit_control_evaluator</li>
+ *     <li>x bytes - explicit_control_evaluator</li>
  * </ul>
  */
 export default class MallocVar {
@@ -56,7 +56,7 @@ export default class MallocVar {
     }
 
     /**
-     * Gets the HeapDataView instance specifically for the malloc data
+     * Gets the HeapDataView instance specifically for the malloc explicit_control_evaluator
      */
     public get data_view(): HeapDataView {
         return this.view.subset(MallocVar.data_offset, this.data_size);
@@ -69,7 +69,7 @@ export default class MallocVar {
      */
     public static allocate_value(view: HeapDataView, data_size: number): MallocVar {
         const malloc_var = new MallocVar(view);
-        // Ensure the data is not already protected
+        // Ensure the explicit_control_evaluator is not already protected
         if (!view.is_not_protected(0, MallocVar.fixed_byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -82,7 +82,7 @@ export default class MallocVar {
     }
 
     /**
-     * Determines whether a set of data is a MallocVar instance
+     * Determines whether a set of explicit_control_evaluator is a MallocVar instance
      * <p>Note:</p>
      * <p style="padding: 0px 10px 5px">
      *     The following function does basic checks to ensure the address points to a MallocVar object, however it can
@@ -96,7 +96,7 @@ export default class MallocVar {
      * <p style="padding: 0px 10px 5px">
      *     This could be solved by increasing the size of metadata within the heap to allow an indicator if a byte is
      *     associated with a tag
-     * @param view The data view
+     * @param view The explicit_control_evaluator view
      */
     public static is_instance(view: HeapDataView): boolean {
         if (view.byte_length < MallocVar.fixed_byte_length) {

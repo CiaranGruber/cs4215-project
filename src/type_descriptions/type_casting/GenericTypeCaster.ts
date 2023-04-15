@@ -11,8 +11,8 @@ import ImmutableDataView from "../../heap/ImmutableDataView";
 
 /**
  * Performs a basic cast reading bytes from the right first and padding appropriately
- * @param dest_size The size of the destination data
- * @param data The data to cast
+ * @param dest_size The size of the destination explicit_control_evaluator
+ * @param data The explicit_control_evaluator to cast
  * @protected
  */
 export function basic_padding_cast(dest_size: number, data: DataView): ArrayBuffer {
@@ -35,9 +35,14 @@ export function basic_padding_cast(dest_size: number, data: DataView): ArrayBuff
  */
 export default abstract class GenericTypeCaster {
     /**
-     * Casts the given data of src type
+     * Casts the given explicit_control_evaluator of src type
      * @param src The source type to cast from
-     * @param data The data to cast
+     * @param data The explicit_control_evaluator to cast
      */
     public abstract cast_to(src: TypeInformation, data: ImmutableDataView): ArrayBuffer;
+
+    /**
+     * Gets the default value for the given type - typically just an empty array buffer
+     */
+    public abstract default_value(): ArrayBuffer;
 }

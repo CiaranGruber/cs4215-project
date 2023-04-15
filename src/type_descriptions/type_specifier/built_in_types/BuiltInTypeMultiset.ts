@@ -57,7 +57,7 @@ export default class BuiltInTypeMultiset {
     }
 
     /**
-     * Gets the size of the data associated with the type
+     * Gets the size of the explicit_control_evaluator associated with the type
      */
     public get data_size() {
         return this.type_size;

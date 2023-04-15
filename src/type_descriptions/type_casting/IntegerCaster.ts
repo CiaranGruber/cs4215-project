@@ -22,7 +22,7 @@ export default class IntegerCaster extends GenericTypeCaster {
 
     /**
      * Constructs a new IntegerCaster
-     * @param data_size The size of the integer data
+     * @param data_size The size of the integer explicit_control_evaluator
      */
     public constructor(data_size: number) {
         super();
@@ -51,5 +51,9 @@ export default class IntegerCaster extends GenericTypeCaster {
             return basic_padding_cast(this.data_size, new DataView(data.buffer, byte_offset, src_data_size));
         }
         throw new InvalidCastError("Failed to cast value to pointer");
+    }
+
+    public default_value(): ArrayBuffer {
+        return new ArrayBuffer(this.data_size);
     }
 }

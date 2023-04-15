@@ -9,7 +9,7 @@
 
 import HeapDataView from "../../HeapDataView";
 import {SegmentationFaultError} from "../../RestrictedHeap";
-import UInt8 from "../data/UInt8";
+import UInt8 from "../../../data_views/UInt8";
 
 export enum CMemoryTagValue {
     MALLOC_VAR,
@@ -18,7 +18,9 @@ export enum CMemoryTagValue {
     BUILT_IN_TYPE,
     STRUCT_TYPE,
     ENUM_TYPE,
-    EMPTY_ENVIRONMENT
+    EMPTY_ENVIRONMENT,
+    CALL_FRAME,
+    BLOCK_FRAME
 }
 
 /**
@@ -34,7 +36,7 @@ export default class CMemoryTag {
     private static readonly tag_length = UInt8.byte_length;
     private tag_data: HeapDataView;
     /**
-     * The length of data used to represent a memory tag
+     * The length of explicit_control_evaluator used to represent a memory tag
      */
     public static readonly byte_length = UInt8.byte_length;
 
@@ -75,7 +77,7 @@ export default class CMemoryTag {
         }
         // Set value
         memory_tag.tag = tag;
-        // Protect data
+        // Protect explicit_control_evaluator
         view.protect(0, CMemoryTag.byte_length);
         return memory_tag;
     }

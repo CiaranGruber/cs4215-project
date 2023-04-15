@@ -8,10 +8,9 @@
  */
 import TypeInformation from "../type_descriptions/TypeInformation";
 import ImmutableDataView from "../heap/ImmutableDataView";
-import PointerDataView from "./views/PointerDataView";
 import CMemory from "../heap/CMemory";
 import {InvalidTypeError} from "../type_descriptions/type_specifier/built_in_types/BuiltInTypeMatcher";
-import {TypeSpecifierType} from "../type_descriptions/type_specifier/TypeSpecifier";
+import Pointer from "../data_views/Pointer";
 
 /**
  * Represents a value from C memory which may or may not be held in memory in actuality
@@ -19,12 +18,16 @@ import {TypeSpecifierType} from "../type_descriptions/type_specifier/TypeSpecifi
 export default class CValue {
     private _is_l_value: boolean;
     private _type_information: TypeInformation;
-    private data: ArrayBuffer;
+    private _data: ArrayBuffer;
 
     public constructor(is_l_value: boolean, type_information: TypeInformation, data: ArrayBuffer) {
         this._is_l_value = is_l_value;
         this._type_information = type_information;
-        this.data = data;
+        this._data = data;
+    }
+
+    public get data(): ArrayBuffer {
+        return this._data.slice(0);
     }
 
     /**
@@ -65,10 +68,10 @@ export default class CValue {
         // Functions should allow dereferencing but do nothing
         if (!this.type_information.is_function) {
             this.type_information.deref();
-            // Don't dereference unless it is already an lvalue
+            // Don't dereference unless it is already a lvalue
             if (this.is_l_value) {
-                const pointer = new PointerDataView(new DataView(this.data));
-                memory.get_data_view(pointer.address, this.type_information.data_size);
+                const pointer = new Pointer(new DataView(this._data));
+                this._data = memory.get_data_view(pointer.value, this.type_information.data_size).referenced_buffer;
             }
         }
         this.is_l_value = true;
@@ -78,45 +81,38 @@ export default class CValue {
      * Gets the value that the CValue points to
      */
     public get_value(memory: CMemory): ImmutableDataView {
-        if (this.type_information.declaration_specifier.specifier.type === TypeSpecifierType.BUILT_IN_MULTISET) {
-
-        }
         if (this.is_l_value) {
-            const pointer = new PointerDataView(new DataView(this.data));
-            return memory.get_data_view(pointer.address, this.type_information.data_size);
+            const pointer = new Pointer(new ImmutableDataView(this._data));
+            return memory.get_data_view(pointer.value, this.type_information.data_size);
         }
-        return new ImmutableDataView(this.data);
+        return new ImmutableDataView(this._data);
     }
 
     /**
-     * Sets the value of the CValue to the specified value which must be of the same data size
+     * Sets the value of the CValue to the specified value which must be of the same explicit_control_evaluator size
      * @param memory The memory of the value for the case that it is setting an lvalue
      * @param value The value to set
      */
     public set_value(memory: CMemory, value: ArrayBuffer) {
-        // Check value matches data
+        // Check value matches explicit_control_evaluator
         if (value.byteLength !== this.type_information.data_size) {
             throw new InvalidTypeError("The value passed into CValue must be of the same size at least compared to " +
-                "the original")
+                "the original");
         }
-        // Gets the data view to set the value
+        // Gets the explicit_control_evaluator view to set the value
         let data_view: DataView;
         if (this.is_l_value) {
-            const heap_view = memory.get_heap_view(new PointerDataView(new DataView(this.data)).address,
-                this.type_information.data_size);
+            const pointer = new Pointer(new DataView(this._data));
+            const heap_view = memory.get_heap_view(pointer.value, this.type_information.data_size);
             data_view = this.type_information.declaration_specifier.qualifier.convert_assign_view(heap_view);
         } else {
             data_view = this.type_information.declaration_specifier.qualifier.convert_assign_view(new DataView(value));
         }
-        // Set value in data view
+        // Set value in explicit_control_evaluator view
         const value_view = new Uint8Array(value);
         value_view.forEach((value, index) => {
             data_view.setUint8(index, value);
         });
-    }
-
-    private get data_size(): number {
-        return this.data.byteLength;
     }
 
     /**
@@ -124,7 +120,7 @@ export default class CValue {
      * @param type The type to cast to
      */
     public cast_to(type: TypeInformation) {
-        this.data = type.cast_data(this._type_information, new ImmutableDataView(this.data));
+        this._data = type.cast_data(this._type_information, new ImmutableDataView(this._data));
         // Value is no longer an l_value
         this.is_l_value = false;
         this._type_information = type;

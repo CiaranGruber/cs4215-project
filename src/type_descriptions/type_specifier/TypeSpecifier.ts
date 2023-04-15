@@ -38,7 +38,7 @@ export default abstract class TypeSpecifier {
     }
 
     /**
-     * Gets the size of the data associated with the type specifier
+     * Gets the size of the explicit_control_evaluator associated with the type specifier
      */
     public abstract get data_size(): number;
 

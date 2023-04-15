@@ -42,4 +42,8 @@ export default class PointerCaster extends GenericTypeCaster {
         }
         throw new InvalidCastError("Failed to cast value to pointer");
     }
+
+    public default_value(): ArrayBuffer {
+        return new ArrayBuffer(LanguageContext.pointer_size);
+    }
 }
