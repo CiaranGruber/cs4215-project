@@ -11,70 +11,80 @@ import ImmutableDataView from "../heap/ImmutableDataView";
 import CMemory from "../heap/CMemory";
 import {InvalidTypeError} from "../type_descriptions/type_specifier/built_in_types/BuiltInTypeMatcher";
 import Pointer from "../data_views/Pointer";
+import {FunctionTypeSpecifier, TypeSpecifierType} from "../type_descriptions/type_specifier/TypeSpecifier";
+import FunctionManager from "../functions/FunctionManager";
 
 /**
- * Represents a value from C memory which may or may not be held in memory in actuality
+ * Represents a value from C memory which may or may not be held in memory
  */
 export default class CValue {
-    private _is_l_value: boolean;
-    private _type_information: TypeInformation;
-    private _data: ArrayBuffer;
+    public readonly is_l_value: boolean;
+    public readonly type_information: TypeInformation;
+    private readonly _data: ArrayBuffer;
 
     public constructor(is_l_value: boolean, type_information: TypeInformation, data: ArrayBuffer) {
-        this._is_l_value = is_l_value;
-        this._type_information = type_information;
+        this.is_l_value = is_l_value;
+        this.type_information = type_information;
         this._data = data;
     }
 
+    /**
+     * Gets the exact data that the C value holds
+     * Note: CValue.get_value() should be used when the goal is to get the value that the CValue references
+     */
     public get data(): ArrayBuffer {
         return this._data.slice(0);
     }
 
     /**
-     * Gets the type information for the CValue
+     * Calls the given value as if it is a function
+     * @param args The arguments to the function
+     * @param memory The memory associated with the C
+     * @param function_manager The function manager used to get the relevant function
      */
-    public get type_information(): TypeInformation {
-        return this._type_information;
-    }
-
-    /**
-     * Whether the CValue is an lValue or not
-     */
-    public get is_l_value(): boolean {
-        return this._is_l_value;
-    }
-
-    private set is_l_value(new_value: boolean) {
-        this._is_l_value = new_value;
+    public call(args: Array<CValue>, memory: CMemory, function_manager: FunctionManager): CValue {
+        const specifier = this.type_information.declaration_specifier.specifier;
+        if (specifier.type === TypeSpecifierType.FUNCTION && this.type_information.pointers.length < 2) {
+            const function_specifier = specifier as FunctionTypeSpecifier;
+            if (this.type_information.pointers.length === 0) {
+                return function_specifier.call_function(this.get_value(memory), args, memory, function_manager);
+            }
+            // Run even if it is a pointer to a function
+            return function_specifier.call_function(this.deref(memory).get_value(memory), args, memory, function_manager);
+        } else {
+            throw new InvalidTypeError("Cannot call a non-function value")
+        }
     }
 
     /**
      * References the CValue, changing it from an lvalue to a prValue
      */
-    public ref(): void {
+    public ref(): CValue {
         if (!this.type_information.is_function) {
             if (!this.is_l_value) {
                 throw new CannotReferencePrValueError("An lvalue is required to reference");
             }
-            this.type_information.ref();
+            const clone_type = this.type_information.ref();
+            return new CValue(false, clone_type, this._data);
         }
-        this.is_l_value = false;
+        return new CValue(false, this.type_information, this._data);
     }
 
     /**
      * Dereferences the CValue and turns it into an lvalue and dereferences if it already is one
      */
-    public deref(memory: CMemory): void {
+    public deref(memory: CMemory): CValue {
         // Functions should allow dereferencing but do nothing
         if (!this.type_information.is_function) {
-            this.type_information.deref();
+            const clone_type = this.type_information.deref();
             // Don't dereference unless it is already a lvalue
             if (this.is_l_value) {
                 const pointer = new Pointer(new DataView(this._data));
-                this._data = memory.get_data_view(pointer.value, this.type_information.data_size).referenced_buffer;
+                const new_data = memory.get_data_view(pointer.value, this.type_information.data_size).referenced_buffer;
+                return new CValue(true, clone_type, new_data);
             }
         }
-        this.is_l_value = true;
+        return new CValue(true, this.type_information, this._data);
     }
 
     /**
@@ -89,17 +99,17 @@ export default class CValue {
     }
 
     /**
-     * Sets the value of the CValue to the specified value which must be of the same explicit_control_evaluator size
+     * Sets the value of the CValue to the specified value which must be of the same data size
      * @param memory The memory of the value for the case that it is setting an lvalue
      * @param value The value to set
      */
     public set_value(memory: CMemory, value: ArrayBuffer) {
-        // Check value matches explicit_control_evaluator
+        // Check value matches data
         if (value.byteLength !== this.type_information.data_size) {
             throw new InvalidTypeError("The value passed into CValue must be of the same size at least compared to " +
                 "the original");
         }
-        // Gets the explicit_control_evaluator view to set the value
+        // Gets the data view to set the value
         let data_view: DataView;
         if (this.is_l_value) {
             const pointer = new Pointer(new DataView(this._data));
@@ -108,7 +118,7 @@ export default class CValue {
         } else {
             data_view = this.type_information.declaration_specifier.qualifier.convert_assign_view(new DataView(value));
         }
-        // Set value in explicit_control_evaluator view
+        // Set value in data view
         const value_view = new Uint8Array(value);
         value_view.forEach((value, index) => {
             data_view.setUint8(index, value);
@@ -119,11 +129,10 @@ export default class CValue {
      * Attempts to cast to the given type if possible
      * @param type The type to cast to
      */
-    public cast_to(type: TypeInformation) {
-        this._data = type.cast_data(this._type_information, new ImmutableDataView(this._data));
+    public cast_to(type: TypeInformation): CValue {
+        const cast_data = type.cast_data(this.type_information, new ImmutableDataView(this._data));
         // Value is no longer an l_value
-        this.is_l_value = false;
-        this._type_information = type;
+        return new CValue(false, type, cast_data);
     }
 }
 

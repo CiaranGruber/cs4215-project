@@ -10,7 +10,7 @@
 import HeapDataView from "../heap/HeapDataView";
 
 /**
- * Allows viewing of Bool explicit_control_evaluator views including for the C Heap
+ * Allows viewing of Bool data views including for the C Heap
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">

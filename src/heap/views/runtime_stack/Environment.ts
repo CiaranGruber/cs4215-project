@@ -82,10 +82,19 @@ export default class Environment {
     }
 
     /**
-     * Declares the given variable in the environment
+     * Declares the given variable in the environment without setting a value
      * @param name The name of the variable to declare
      */
-    public declare_variable(name: string): void {
+    public declare_variable(name: string);
+
+    /**
+     * Declares the given variable in the environment and sets its value
+     * @param name The name of the variable to declare
+     * @param value The value to set during the declaration
+     */
+    public declare_variable(name: string, value: CValue);
+
+    public declare_variable(name: string, value?: CValue): void {
         if (this.is_empty()) {
             throw new VariableNotFoundError(`The variable ${name} is not present in the current environment`);
         }
@@ -105,6 +114,11 @@ export default class Environment {
                     environment`);
                 }
                 variable.declare();
+                // Set value if relevant
+                if (value !== undefined) {
+                    const heap_view = variable.data_view;
+                    heap_view.set_value(value.cast_to(variable.type_info).data);
+                }
                 return;
             }
             offset += variable_size;
@@ -119,7 +133,7 @@ export default class Environment {
     public static allocate_value(view: HeapDataView, variables: Array<VariableDeclaration>): Environment {
         const environment = new Environment(view);
         const environment_size = this.size_required(variables);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, environment_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -134,8 +148,10 @@ export default class Environment {
         // Store variable information
         let offset = this.variable_offset;
         variables.forEach((value) => {
-            const variable_view = environment.data.subset(offset, VariableMem.size_required(value));
+            const size_required = VariableMem.size_required(value);
+            const variable_view = environment.data.subset(offset, size_required);
             VariableMem.allocate_value(variable_view, value);
+            offset += size_required;
         });
         return environment;
     }

@@ -1,7 +1,7 @@
 /**
- * BigUInt64
+ * FunctionPointer
  *
- * Represents a BigUInt64 for use by the evaluator within C Memory
+ * Represents a Function Pointer for use by the evaluator within C Memory
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -10,35 +10,35 @@
 import HeapDataView from "../heap/HeapDataView";
 
 /**
- * Represents a BigInt32 for use by the evaluator within C Memory
+ * Allows viewing of Function Pointer data views including for the C Heap
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>8 bytes - The number stored</li>
+ *     <li>4 bytes - The number stored</li>
  * </ul>
  */
-export default class BigUInt64 {
-    public static readonly byte_length = 8;
+export default class FunctionPointer {
+    public static readonly byte_length = 4;
     private readonly overwrite_protection: boolean;
     private readonly little_endian: boolean;
     private readonly data: DataView;
 
     /**
-     * Initialises a new C BigUInt64 viewer without the ability to overwrite protected values and in big-endian format
-     * @param view The view of the heap with the BigUInt64
+     * Initialises a new C FunctionPointer viewer without the ability to overwrite protected values and in big-endian format
+     * @param view The data view with the FunctionPointer
      */
     public constructor(view: DataView);
 
     /**
-     * Initialises a new C BigUInt64 viewer with the ability to overwrite protected values and in big-endian format
-     * @param view The view of the heap with the BigUInt64
+     * Initialises a new C FunctionPointer viewer with the ability to overwrite protected values and in big-endian format
+     * @param view The view of the heap with the FunctionPointer
      * @param overwrite_protection Whether to overwrite protection
      */
     public constructor(view: HeapDataView, overwrite_protection: boolean);
 
     /**
-     * Initialises a new C BigUInt64 viewer with the ability to overwrite protected values
-     * @param view The view of the heap with the BigUInt64
+     * Initialises a new C FunctionPointer viewer with the ability to overwrite protected values
+     * @param view The data view with the FunctionPointer
      * @param overwrite_protection Whether to overwrite protection (Not used for non-HeapDataView instances)
      * @param little_endian Whether to use little-endian format for data
      */
@@ -60,25 +60,25 @@ export default class BigUInt64 {
     /**
      * Gets the value associated with the view
      */
-    public get value(): bigint {
+    public get value(): number {
         if (this.data instanceof HeapDataView) {
-            return this.data.get_value(0, BigUInt64.byte_length).getBigUint64(0, this.little_endian);
+            return this.data.get_value(0, FunctionPointer.byte_length).getUint32(0, this.little_endian);
         }
-        return this.data.getBigUint64(0, this.little_endian);
+        return this.data.getUint32(0, this.little_endian);
     }
 
     /**
      * Sets the value associated with the view
      * @param new_value The new value to set
      */
-    public set value(new_value: bigint) {
+    public set value(new_value: number) {
         if (!(this.data instanceof HeapDataView)) {
-            this.data.setBigUint64(0, new_value, this.little_endian);
+            this.data.setUint32(0, new_value, this.little_endian);
             return;
         }
         // Get value
-        const value = new ArrayBuffer(BigUInt64.byte_length);
-        new DataView(value).setBigUint64(0, new_value, this.little_endian);
+        const value = new ArrayBuffer(FunctionPointer.byte_length);
+        new DataView(value).setUint32(0, new_value, this.little_endian);
         // Set the value in the heap
         this.data.set_value(value, 0, this.overwrite_protection);
     }
@@ -87,9 +87,9 @@ export default class BigUInt64 {
      * Creates a buffer with the associated value
      * @param value The value to create a buffer for
      */
-    public static create_buffer(value: bigint): ArrayBuffer {
-        const value_buffer = new ArrayBuffer(BigUInt64.byte_length);
-        new BigUInt64(new DataView(value_buffer)).value = value;
+    public static create_buffer(value: number): ArrayBuffer {
+        const value_buffer = new ArrayBuffer(FunctionPointer.byte_length);
+        new FunctionPointer(new DataView(value_buffer)).value = value;
         return value_buffer;
     }
 }

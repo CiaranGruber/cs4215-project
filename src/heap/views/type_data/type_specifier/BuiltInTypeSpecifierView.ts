@@ -61,7 +61,7 @@ export default class BuiltInTypeSpecifierView {
      */
     public static allocate_value(view: HeapDataView, type_specifier: BuiltInTypeSpecifier): BuiltInTypeSpecifierView {
         const type_info_view = new BuiltInTypeSpecifierView(view);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, this.byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

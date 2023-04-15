@@ -1,4 +1,4 @@
-import LanguageContext from "../../../../global_context/LanguageContext";
+import GlobalContext from "../../../../global_context/GlobalContext";
 import CMemory from "../../../../heap/CMemory";
 import TypeInformation from "../../../../type_descriptions/TypeInformation";
 import {TypeSpecDeclarationSpecifier} from "../../../../type_descriptions/DeclarationSpecifier";
@@ -14,7 +14,7 @@ import Int16 from "../../../../data_views/Int16";
 function get_basic_type(built_in_specifier: BuiltInTypeSpecifierType): TypeInformation {
     const void_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(built_in_specifier));
     const declaration_specification = DeclarationSpecification.from_specifiers([void_specifier])
-    return new TypeInformation(declaration_specification, [], false);
+    return new TypeInformation(declaration_specification, []);
 }
 
 function get_void_value(): CValue {
@@ -31,7 +31,7 @@ function get_short_value(value: number): CValue {
 
 test('Pushing and pulling from stash', () => {
     // Initialise memory
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
@@ -50,7 +50,7 @@ test('Pushing and pulling from stash', () => {
 
 test('Returned value appearing on stash', () => {
     // Initialise memory
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
@@ -68,7 +68,7 @@ test('Returned value appearing on stash', () => {
 
 test('Default value appearing on stash on return', () => {
     // Initialise memory
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
@@ -85,7 +85,7 @@ test('Default value appearing on stash on return', () => {
 
 test('Casting down return type before putting on stash', () => {
     // Initialise memory
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
@@ -103,7 +103,7 @@ test('Casting down return type before putting on stash', () => {
 
 test('Casting up return type before putting on stash', () => {
     // Initialise memory
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;

@@ -1,8 +1,8 @@
 import BitArray from "../../heap/BitArray";
-import LanguageContext from "../../global_context/LanguageContext";
+import GlobalContext from "../../global_context/GlobalContext";
 
 test('Getting the state of a bit in a BitArray', () => {
-    LanguageContext.initialise_instance(true);
+    GlobalContext.initialise_instance(true);
     // Set up the bit array
     const value: number = 33992
     const data_view: DataView = new DataView(new ArrayBuffer(2));
@@ -17,7 +17,7 @@ test('Getting the state of a bit in a BitArray', () => {
 });
 
 test('Setting a bit in a BitArray', () => {
-    LanguageContext.initialise_instance(true);
+    GlobalContext.initialise_instance(true);
     // Set up the bit array
     const heap: BitArray = new BitArray(new DataView(new ArrayBuffer(2)));
     // Set bits within the bit array

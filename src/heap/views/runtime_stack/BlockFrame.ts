@@ -109,7 +109,7 @@ export default class BlockFrame implements MemoryHandler {
         const environment_size = Environment.size_required(declared_variables);
         const stash_size = Stash.fixed_byte_length;
         const total_size = BlockFrame.fixed_byte_length + environment_size + stash_size;
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, total_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

@@ -1,7 +1,7 @@
 /**
  * EmptyMalloc
  *
- * Represents a set of explicit_control_evaluator in the C Heap acting as an empty malloc value
+ * Represents a set of data in the C Heap acting as an empty malloc value
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -15,12 +15,12 @@ import Pointer from "../../../data_views/Pointer";
 
 
 /**
- * Represents the explicit_control_evaluator associated with empty malloc information
+ * Represents the data associated with empty malloc information
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
  *     <li>Pointer.byte_length - next free address</li>
- *     <li>MallocData.byte_length - internal explicit_control_evaluator</li>
+ *     <li>MallocData.byte_length - internal data</li>
  * </ul>
  */
 export default class EmptyMalloc {
@@ -85,7 +85,7 @@ export default class EmptyMalloc {
      */
     public static allocate_value(view: HeapDataView, size_available: number, next_address: number): EmptyMalloc {
         const empty_malloc = new EmptyMalloc(view);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, EmptyMalloc.byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -100,8 +100,8 @@ export default class EmptyMalloc {
     }
 
     /**
-     * Determines whether a set of explicit_control_evaluator is a EmptyMalloc instance
-     * @param view The explicit_control_evaluator view
+     * Determines whether a set of data is a EmptyMalloc instance
+     * @param view The data view
      */
     public static is_instance(view: HeapDataView): boolean {
         if (view.byte_length < EmptyMalloc.byte_length) {

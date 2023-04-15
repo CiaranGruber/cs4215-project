@@ -92,13 +92,13 @@ export default class CMemory implements MemoryHandler {
         // Allocate memory for stack value
         const old_free = this.stack_free;
         this.stack_free += size;
-        // Return explicit_control_evaluator view of the allocated memory
+        // Return data view of the allocated memory
         return new HeapDataView(this.base_heap, old_free, size);
     }
 
     /**
      * Deallocates the given memory from the stack to be utilised by other processes
-     * @param size The size of the explicit_control_evaluator to deallocate
+     * @param size The size of the data to deallocate
      */
     public deallocate_from_stack(size: number) {
         this.stack_free -= size;
@@ -117,7 +117,7 @@ export default class CMemory implements MemoryHandler {
     }
 
     /**
-     * Gets an immutable explicit_control_evaluator view of the heap at the given offset and length
+     * Gets an immutable data view of the heap at the given offset and length
      * @param byte_offset The byte offset to get the view for
      * @param byte_length The byte length to get the view for
      */
@@ -143,7 +143,7 @@ export default class CMemory implements MemoryHandler {
 
     /**
      * Allocates a new set of memory into the heap
-     * @param size The size of the explicit_control_evaluator required
+     * @param size The size of the data required
      */
     public malloc(size: number): HeapDataView {
         // Ensure variable can be freed

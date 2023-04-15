@@ -1,7 +1,7 @@
 /**
  * HeapDataView
  *
- * The basic explicit_control_evaluator view used for managing explicit_control_evaluator within the heap
+ * The basic data view used for managing data within the heap
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -20,7 +20,7 @@ import BigInt64 from "../data_views/BigInt64";
 import BigUInt64 from "../data_views/BigUInt64";
 
 /**
- * Represents a explicit_control_evaluator view of the heap which can be used to abstract out explicit_control_evaluator from its location in the heap
+ * Represents a data view of the heap which can be used to abstract out data from its location in the heap
  */
 export default class HeapDataView implements DataView {
     [Symbol.toStringTag]: string;
@@ -60,7 +60,7 @@ export default class HeapDataView implements DataView {
     }
 
     /**
-     * Gets a string showing the explicit_control_evaluator in the heap view
+     * Gets a string showing the data in the heap view
      */
     public to_string(): string {
         const line_length = 8;
@@ -72,7 +72,7 @@ export default class HeapDataView implements DataView {
             } else {
                 string += " ";
             }
-            // Add byte explicit_control_evaluator
+            // Add byte data
             string += this.is_protected(i) ? "P" : "-";
             string += bytes_to_string(this.get_value(i, 1));
         }
@@ -223,7 +223,7 @@ export default class HeapDataView implements DataView {
     /**
      * Gets a subset of the current HeapDataView with the given offset and length
      * @param byte_offset The offset relative to the current HeapDataView in bytes
-     * @param byte_length The number of bytes of explicit_control_evaluator to include in the subset
+     * @param byte_length The number of bytes of data to include in the subset
      */
     public subset(byte_offset: number, byte_length: number);
 

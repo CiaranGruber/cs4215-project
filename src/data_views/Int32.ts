@@ -10,7 +10,7 @@
 import HeapDataView from "../heap/HeapDataView";
 
 /**
- * Allows viewing of Int32 explicit_control_evaluator views including for the C Heap
+ * Allows viewing of Int32 data views including for the C Heap
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
@@ -25,7 +25,7 @@ export default class Int32 {
 
     /**
      * Initialises a new C Int32 viewer without the ability to overwrite protected values and in big-endian format
-     * @param view The explicit_control_evaluator view with the Int32
+     * @param view The data view with the Int32
      */
     public constructor(view: DataView);
 
@@ -38,9 +38,9 @@ export default class Int32 {
 
     /**
      * Initialises a new C Int32 viewer with the ability to overwrite protected values
-     * @param view The explicit_control_evaluator view with the Int32
+     * @param view The data view with the Int32
      * @param overwrite_protection Whether to overwrite protection (Not used for non-HeapDataView instances)
-     * @param little_endian Whether to use little-endian format for explicit_control_evaluator
+     * @param little_endian Whether to use little-endian format for data
      */
     public constructor(view: DataView, overwrite_protection: boolean, little_endian: boolean);
 

@@ -7,16 +7,16 @@ import {BuiltInTypeSpecifierEnum} from "../../../../type_descriptions/type_speci
 import {
     BuiltInTypeSpecifierType
 } from "../../../../type_descriptions/type_specifier/built_in_types/BuiltInTypeSpecifierType";
-import LanguageContext from "../../../../global_context/LanguageContext";
+import GlobalContext from "../../../../global_context/GlobalContext";
 
 function get_base_return(): TypeInformation {
     const void_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.VOID));
     const declaration_specification = DeclarationSpecification.from_specifiers([void_specifier])
-    return new TypeInformation(declaration_specification, [], false);
+    return new TypeInformation(declaration_specification, []);
 }
 
 test('Initialising the initial stack', () => {
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
@@ -26,7 +26,7 @@ test('Initialising the initial stack', () => {
 });
 
 test('Initialising multiple frames', () => {
-    LanguageContext.initialise_instance(false);
+    GlobalContext.initialise_instance(false);
     const memory_size = 128;
     const memory = new CMemory(memory_size);
     const stack = memory.stack;

@@ -31,7 +31,7 @@ export function bytes_to_string(bytes: DataView): string {
 }
 
 /**
- * Copies the explicit_control_evaluator from a source array buffer to the destination array buffer
+ * Copies the data from a source array buffer to the destination array buffer
  * @param src The source array buffer
  * @param dest The destination array buffer
  */
@@ -49,7 +49,7 @@ export default class RestrictedHeap {
      */
     private protection_array: BitArray;
     /**
-     * The actual explicit_control_evaluator used for the heap
+     * The actual data used for the heap
      * @private
      */
     private readonly data: ArrayBuffer;
@@ -82,7 +82,7 @@ export default class RestrictedHeap {
         } else {
             this.protection_array = new BitArray(new DataView(new ArrayBuffer(Math.ceil(size / 8.0))));
         }
-        // Create main explicit_control_evaluator heap
+        // Create main data heap
         this.data = new ArrayBuffer(size);
     }
 
@@ -106,7 +106,7 @@ export default class RestrictedHeap {
             } else {
                 string += " ";
             }
-            // Add byte explicit_control_evaluator
+            // Add byte data
             string += this.protection_array.is_set(i) ? "P" : "-";
             string += bytes_to_string(new ImmutableDataView(new DataView(this.data, i, 1)));
         }

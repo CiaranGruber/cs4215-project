@@ -40,7 +40,7 @@ export default class BigInt64 {
      * Initialises a new C BigInt64 viewer with the ability to overwrite protected values
      * @param view The view of the heap with the BigInt64
      * @param overwrite_protection Whether to overwrite protection (Not used for non-HeapDataView instances)
-     * @param little_endian Whether to use little-endian format for explicit_control_evaluator
+     * @param little_endian Whether to use little-endian format for data
      */
     public constructor(view: DataView, overwrite_protection: boolean, little_endian: boolean);
 

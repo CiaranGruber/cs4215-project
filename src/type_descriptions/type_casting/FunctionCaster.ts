@@ -1,5 +1,5 @@
 /**
- * PointerCaster
+ * FunctionCaster
  *
  * Describes the casting object used to cast values to a pointer
  * Created for CS4215 term project
@@ -16,15 +16,15 @@ import {BuiltInMultisetDescription} from "../type_specifier/built_in_types/Built
 /**
  * Used to cast values to a pointer type
  */
-export default class PointerCaster extends GenericTypeCaster {
-    private static readonly basic_cast: Array<TypeSpecifierType> = [TypeSpecifierType.BUILT_IN_MULTISET,
-        TypeSpecifierType.FUNCTION];
+export default class FunctionCaster extends GenericTypeCaster {
+    private static get basic_cast(): Array<TypeSpecifierType> { return [TypeSpecifierType.BUILT_IN_MULTISET,
+        TypeSpecifierType.FUNCTION]; }
 
     public cast_to(src: TypeInformation, data: DataView): ArrayBuffer {
         const dest_size = GlobalContext.pointer_size;
         const src_specifier = src.declaration_specifier.specifier;
         // Most basic cast
-        if (src.is_pointer || src.is_function || PointerCaster.basic_cast.includes(src_specifier.type)) {
+        if (src.is_pointer || src.is_function || FunctionCaster.basic_cast.includes(src_specifier.type)) {
             let src_data_size;
             if (src.is_pointer) {
                 src_data_size = GlobalContext.pointer_size;

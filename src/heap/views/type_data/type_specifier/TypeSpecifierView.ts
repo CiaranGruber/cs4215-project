@@ -12,11 +12,13 @@ import HeapDataView from "../../../HeapDataView";
 import {SegmentationFaultError} from "../../../RestrictedHeap";
 import TypeSpecifier, {
     BuiltInTypeSpecifier,
+    FunctionTypeSpecifier,
     InvalidSpecifierError,
     TypeSpecifierType
 } from "../../../../type_descriptions/type_specifier/TypeSpecifier";
 import BuiltInTypeSpecifierView from "./BuiltInTypeSpecifierView";
 import UInt16 from "../../../../data_views/UInt16";
+import FunctionTypeSpecifierView from "./FunctionTypeSpecifierView";
 
 /**
  * Represents a set of type information
@@ -53,6 +55,8 @@ export default class TypeSpecifierView {
         switch (this.tag) {
             case CMemoryTagValue.BUILT_IN_TYPE:
                 return new BuiltInTypeSpecifier(BuiltInTypeSpecifierView.from_existing(this.specifier_info_view).multiset);
+            case CMemoryTagValue.FUNCTION:
+                return new FunctionTypeSpecifier(FunctionTypeSpecifierView.from_existing(this.specifier_info_view).return_type);
         }
     }
 
@@ -91,8 +95,8 @@ export default class TypeSpecifierView {
      */
     public static allocate_value(view: HeapDataView, type_specifier: TypeSpecifier): TypeSpecifierView {
         const type_info_view = new TypeSpecifierView(view);
-        const total_size = TypeSpecifierView.fixed_byte_length;
-        // Ensure the explicit_control_evaluator is not already protected
+        const total_size = TypeSpecifierView.size_required(type_specifier);
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, total_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -103,6 +107,13 @@ export default class TypeSpecifierView {
                 type_info_view.size = BuiltInTypeSpecifierView.byte_length;
                 BuiltInTypeSpecifierView.allocate_value(type_info_view.specifier_info_view,
                     type_specifier as BuiltInTypeSpecifier);
+                break;
+            case TypeSpecifierType.FUNCTION:
+                CMemoryTag.allocate_value(type_info_view.tag_view, CMemoryTagValue.FUNCTION);
+                const function_type_size = FunctionTypeSpecifierView.size_required(type_specifier as FunctionTypeSpecifier);
+                type_info_view.size = function_type_size;
+                FunctionTypeSpecifierView.allocate_value(type_info_view.specifier_info_view,
+                    type_specifier as FunctionTypeSpecifier);
                 break;
             default:
                 throw new InvalidSpecifierError("The given specifier cannot be converted into a type view");
@@ -121,6 +132,8 @@ export default class TypeSpecifierView {
         switch (type_specifier.type) {
             case TypeSpecifierType.BUILT_IN_MULTISET:
                 return fixed_length + BuiltInTypeSpecifierView.byte_length;
+            case TypeSpecifierType.FUNCTION:
+                return fixed_length + FunctionTypeSpecifierView.size_required(type_specifier as FunctionTypeSpecifier);
             default:
                 throw new InvalidSpecifierError("The size of the given specifier cannot be determined");
         }

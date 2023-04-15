@@ -35,135 +35,149 @@ function make_basic_type_multiset(type_size: number, type_caster: GenericTypeCas
  */
 export default class BuiltInMultisetManager {
     /**
-     * The available basic type multisets represent Integers, Void, etc as specified by C17 Spec 6.7.2
+     * The available basic type multisets represent Integers, Void, etc. as specified by C17 Spec 6.7.2
      * @private
      */
-    private static basic_type_multisets: Array<BuiltInTypeMultiset> = [
-        // Represents the void type
-        make_basic_type_multiset(0, new VoidCaster(), new Set([BuiltInMultisetDescription.IS_VOID]),
-            [new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.VOID, 1]])]),
-        // Represents a char or a signed char
-        make_basic_type_multiset(1, new IntegerCaster(1),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]),
-            [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.CHAR, 1]]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.CHAR, 1]
-                ])
-            ]),
-        // Represents an unsigned char
-        make_basic_type_multiset(1, new IntegerCaster(1),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.CHAR, 1]
-                ])
-            ]),
-        // Represents a signed short
-        make_basic_type_multiset(2, new IntegerCaster(2),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.SHORT, 1]]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.SHORT, 1]
+    private static _basic_type_multisets: Array<BuiltInTypeMultiset>;
+    /**
+     * Late invocation of multiset creation to prevent JavaScript import bugs
+     */
+    private static get basic_type_multisets() {
+        if (this._basic_type_multisets !== undefined) {
+            return this._basic_type_multisets;
+        }
+        this._basic_type_multisets = [
+            // Represents the void type
+            make_basic_type_multiset(0, new VoidCaster(), new Set([BuiltInMultisetDescription.IS_VOID]),
+                [new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.VOID, 1]])]),
+            // Represents a char or a signed char
+            make_basic_type_multiset(1, new IntegerCaster(1),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]),
+                [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.CHAR, 1]]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.CHAR, 1]
+                    ])
                 ]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SHORT, 1], [BuiltInTypeSpecifierType.INT, 1]
+            // Represents an unsigned char
+            make_basic_type_multiset(1, new IntegerCaster(1),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.CHAR, 1]
+                    ])
                 ]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.SHORT, 1], [BuiltInTypeSpecifierType.INT, 1]
-                ])
-            ]),
-        // Represents the signed int and specifies that signed by itself is also an int
-        make_basic_type_multiset(4, new IntegerCaster(4),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.SIGNED, 1]]),
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.INT, 1]]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.INT, 1]
-                ])
-            ]),
-        // Represents the unsigned int and specifies that unsigned by itself is also an unsigned int
-        make_basic_type_multiset(4,  new IntegerCaster(4),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.UNSIGNED, 1]]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.INT, 1]
-                ])
-            ]),
-        // Represents a signed long
-        make_basic_type_multiset(8, new IntegerCaster(8),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.LONG, 1]]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1]
-                ]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.LONG, 1], [BuiltInTypeSpecifierType.INT, 1]
-                ]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1],
-                    [BuiltInTypeSpecifierType.INT, 1]
-                ])
-            ]),
-        // Represents an unsigned long
-        make_basic_type_multiset(8, new IntegerCaster(8),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1]
-                ]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1],
-                    [BuiltInTypeSpecifierType.INT, 1]
-                ])        ]),
-                // Represents a signed long long value
-                make_basic_type_multiset(8, new IntegerCaster(8),
-                        new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                                        new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.LONG, 2]]),
-                        new Map<BuiltInTypeSpecifierType, number>([
-                            [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2]
-                        ]),
-                        new Map<BuiltInTypeSpecifierType, number>([
-                            [BuiltInTypeSpecifierType.LONG, 2], [BuiltInTypeSpecifierType.INT, 1]
-                        ]),
-                        new Map<BuiltInTypeSpecifierType, number>([
-                            [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2],
-                            [BuiltInTypeSpecifierType.INT, 1]
-                        ])
+            // Represents a signed short
+            make_basic_type_multiset(2, new IntegerCaster(2),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.SHORT, 1]]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.SHORT, 1]
                     ]),
-        // Represents an unsigned long long
-        make_basic_type_multiset(8, new IntegerCaster(8),
-            new Set([BuiltInMultisetDescription.IS_INTEGER]), [
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2]
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SHORT, 1], [BuiltInTypeSpecifierType.INT, 1]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.SHORT, 1], [BuiltInTypeSpecifierType.INT, 1]
+                    ])
                 ]),
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2],
-                    [BuiltInTypeSpecifierType.INT, 1]
-                ])
-            ]),
-        // Represents a float
-        make_basic_type_multiset(4, new VoidCaster(),
-            new Set([BuiltInMultisetDescription.IS_FLOAT]), [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.FLOAT, 1]])
-            ]),
-        // Represents a double
-        make_basic_type_multiset(8, new VoidCaster(),
-            new Set([BuiltInMultisetDescription.IS_FLOAT]), [
-                new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.DOUBLE, 1]])
-            ]),
-        // Represents a long double
-        make_basic_type_multiset(8, new VoidCaster(),
-            new Set([BuiltInMultisetDescription.IS_FLOAT]), [
-                new Map<BuiltInTypeSpecifierType, number>([
-                    [BuiltInTypeSpecifierType.LONG, 1], [BuiltInTypeSpecifierType.DOUBLE, 1]
-                ])
-            ]),
-    ];
+            // Represents the signed int and specifies that signed by itself is also an int
+            make_basic_type_multiset(4, new IntegerCaster(4),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.SIGNED, 1]]),
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.INT, 1]]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.INT, 1]
+                    ])
+                ]),
+            // Represents the unsigned int and specifies that unsigned by itself is also an unsigned int
+            make_basic_type_multiset(4, new IntegerCaster(4),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.UNSIGNED, 1]]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.INT, 1]
+                    ])
+                ]),
+            // Represents a signed long
+            make_basic_type_multiset(8, new IntegerCaster(8),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.LONG, 1]]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.LONG, 1], [BuiltInTypeSpecifierType.INT, 1]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1],
+                        [BuiltInTypeSpecifierType.INT, 1]
+                    ])
+                ]),
+            // Represents an unsigned long
+            make_basic_type_multiset(8, new IntegerCaster(8),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1],
+                        [BuiltInTypeSpecifierType.INT, 1]
+                    ])]),
+            // Represents a signed long long value
+            make_basic_type_multiset(8, new IntegerCaster(8),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.LONG, 2]]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.LONG, 2], [BuiltInTypeSpecifierType.INT, 1]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2],
+                        [BuiltInTypeSpecifierType.INT, 1]
+                    ])
+                ]),
+            // Represents an unsigned long long
+            make_basic_type_multiset(8, new IntegerCaster(8),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2]
+                    ]),
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2],
+                        [BuiltInTypeSpecifierType.INT, 1]
+                    ])
+                ]),
+            make_basic_type_multiset(1, new IntegerCaster(1),
+                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType._BOOL, 1]])
+                ]),
+            // Represents a float
+            make_basic_type_multiset(4, new VoidCaster(),
+                new Set([BuiltInMultisetDescription.IS_FLOAT]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.FLOAT, 1]])
+                ]),
+            // Represents a double
+            make_basic_type_multiset(8, new VoidCaster(),
+                new Set([BuiltInMultisetDescription.IS_FLOAT]), [
+                    new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.DOUBLE, 1]])
+                ]),
+            // Represents a long double
+            make_basic_type_multiset(8, new VoidCaster(),
+                new Set([BuiltInMultisetDescription.IS_FLOAT]), [
+                    new Map<BuiltInTypeSpecifierType, number>([
+                        [BuiltInTypeSpecifierType.LONG, 1], [BuiltInTypeSpecifierType.DOUBLE, 1]
+                    ])
+                ]),
+        ];
+        return this._basic_type_multisets;
+    }
 
     /**
      * Gets the full array of multisets in the manager
      */
     public static get multiset_array(): Array<BuiltInTypeMultiset> {
-        return BuiltInMultisetManager.basic_type_multisets;
+            return BuiltInMultisetManager.basic_type_multisets;
     }
 
     /**

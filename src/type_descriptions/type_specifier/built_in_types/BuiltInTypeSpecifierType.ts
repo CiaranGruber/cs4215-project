@@ -19,5 +19,6 @@ export enum BuiltInTypeSpecifierType {
     FLOAT,
     DOUBLE,
     SIGNED,
-    UNSIGNED
+    UNSIGNED,
+    _BOOL
 }

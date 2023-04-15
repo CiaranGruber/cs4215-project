@@ -69,15 +69,31 @@ export default class Stack implements MemoryHandler {
         this.curr_frame_offset_view.value = new_offset;
     }
 
+    /**
+     * Determines whether the stack is currently empty
+     */
     public get is_empty() {
         return this.curr_frame_offset === -1;
     }
 
-    public declare_variable(name: string) {
+    /**
+     * Declares a variable without setting the value
+     * @param name The name of the variable to declare
+     */
+    public declare_variable(name: string);
+
+    /**
+     * Declares the variable with the set value
+     * @param name The name of the value
+     * @param value The value to declare with
+     */
+    public declare_variable(name: string, value: CValue);
+
+    public declare_variable(name: string, value?: CValue) {
         const curr_offset = this.curr_frame_offset;
         const frame_size = BlockFrame.byte_length(this.data.subset(curr_offset, BlockFrame.fixed_byte_length));
         const frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
-        frame.environment.declare_variable(name);
+        frame.environment.declare_variable(name, value);
     }
 
     public get_variable(name: string): CValue {
@@ -142,7 +158,7 @@ export default class Stack implements MemoryHandler {
      */
     public static allocate_value(view: HeapDataView, memory_handler: MemoryHandler): Stack {
         const stack = new Stack(view, memory_handler);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, Stack.fixed_byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
@@ -205,7 +221,7 @@ export default class Stack implements MemoryHandler {
                 return_value = new CValue(false, return_type, return_type.default_value());
             } else {
                 return_value = frame.stash.pop();
-                return_value.cast_to(return_type);
+                return_value = return_value.cast_to(return_type);
             }
         }
 

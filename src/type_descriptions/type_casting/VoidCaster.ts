@@ -16,7 +16,7 @@ import ImmutableDataView from "../../heap/ImmutableDataView";
  */
 export default class VoidCaster extends GenericTypeCaster {
     public cast_to(src: TypeInformation, data: ImmutableDataView): ArrayBuffer {
-        // Allows casts from any type and will return explicit_control_evaluator of 0 size
+        // Allows casts from any type and will return data of 0 size
         return new ArrayBuffer(0);
     }
 

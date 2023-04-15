@@ -1,6 +1,6 @@
 import CMemory from "../../../../heap/CMemory";
 import Stack, {VariableNotFoundError} from "../../../../heap/views/runtime_stack/Stack";
-import LanguageContext from "../../../../global_context/LanguageContext";
+import GlobalContext from "../../../../global_context/GlobalContext";
 import TypeInformation from "../../../../type_descriptions/TypeInformation";
 import {TypeSpecDeclarationSpecifier} from "../../../../type_descriptions/DeclarationSpecifier";
 import {BuiltInTypeSpecifierEnum} from "../../../../type_descriptions/type_specifier/TypeSpecifier";
@@ -14,13 +14,13 @@ import Int32 from "../../../../data_views/Int32";
 function get_base_return(): TypeInformation {
     const void_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.VOID));
     const declaration_specification = DeclarationSpecification.from_specifiers([void_specifier]);
-    return new TypeInformation(declaration_specification, [], false);
+    return new TypeInformation(declaration_specification, []);
 }
 
 function get_int_type(): TypeInformation {
     const int_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.INT));
     const declaration_specification = DeclarationSpecification.from_specifiers([int_specifier]);
-    return new TypeInformation(declaration_specification, [], false);
+    return new TypeInformation(declaration_specification, []);
 }
 
 test('Storing and retrieving variables', () => {
@@ -29,7 +29,7 @@ test('Storing and retrieving variables', () => {
     const variable_name = "test_variable";
     const value_to_set = 4;
     // Initialise memory
-    LanguageContext.initialise_instance(true);
+    GlobalContext.initialise_instance(true);
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
 
@@ -61,7 +61,7 @@ test('Retrieving variables from parent scope', () => {
     const variable_name = "test_variable";
     const value_to_set = 4;
     // Initialise memory
-    LanguageContext.initialise_instance(true);
+    GlobalContext.initialise_instance(true);
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
 

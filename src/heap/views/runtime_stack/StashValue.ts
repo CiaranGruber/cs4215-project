@@ -89,7 +89,7 @@ export default class StashValue {
      * Gets whether the stash value is a function or not (not including function pointers)
      */
     public get is_function(): boolean {
-        return TypeInfoView.from_existing(this.type_info_view).is_function;
+        return TypeInfoView.from_existing(this.type_info_view).type_information.is_function;
     }
 
     private get type_info_size_view(): UInt16 {
@@ -135,7 +135,7 @@ export default class StashValue {
     }
 
     /**
-     * Gets the StashValue view associated with the given stash value
+     * Gets the data view associated with the given stash value
      */
     private get data_view(): HeapDataView {
         return this.data.subset(this.data_offset, this.data_size);

@@ -12,9 +12,10 @@ import DeclarationSpecifier, {
     TypeQualDeclarationSpecifier,
     TypeSpecDeclarationSpecifier
 } from "./DeclarationSpecifier";
-import TypeSpecifier, {InvalidSpecifierError} from "./type_specifier/TypeSpecifier";
+import TypeSpecifier, {FunctionTypeSpecifier, InvalidSpecifierError} from "./type_specifier/TypeSpecifier";
 import TypeQualifier, {build_qualifier, TypeQualifierType} from "./type_qualifier/TypeQualifier";
 import TypeValidator from "./type_specifier/TypeValidator";
+import TypeInformation from "./TypeInformation";
 
 /**
  * Represents a fully specified declaration type
@@ -69,5 +70,13 @@ export default class DeclarationSpecification {
      */
     public static from_existing_specs(type_specifier: TypeSpecifier, type_qualifier: TypeQualifier) {
         return new DeclarationSpecification(type_specifier, type_qualifier);
+    }
+
+    /**
+     * Gets the type used to represent a function
+     */
+    public static function_specifier(return_type: TypeInformation): DeclarationSpecification {
+        return DeclarationSpecification.from_existing_specs(new FunctionTypeSpecifier(return_type),
+            build_qualifier([TypeQualifierType.CONST]));
     }
 }

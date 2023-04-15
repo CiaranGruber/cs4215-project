@@ -124,7 +124,7 @@ export default class FrameHeader {
     public static allocate_value(view: HeapDataView, prev_frame_addr: number, tag: CMemoryTagValue,
                                  environment_size: number): FrameHeader {
         const frame_header = new FrameHeader(view);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, FrameHeader.byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

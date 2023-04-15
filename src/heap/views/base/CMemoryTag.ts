@@ -16,6 +16,7 @@ export enum CMemoryTagValue {
     MALLOC_EMPTY,
     REFERENCE_TYPE,
     BUILT_IN_TYPE,
+    FUNCTION,
     STRUCT_TYPE,
     ENUM_TYPE,
     EMPTY_ENVIRONMENT,
@@ -36,7 +37,7 @@ export default class CMemoryTag {
     private static readonly tag_length = UInt8.byte_length;
     private tag_data: HeapDataView;
     /**
-     * The length of explicit_control_evaluator used to represent a memory tag
+     * The length of data used to represent a memory tag
      */
     public static readonly byte_length = UInt8.byte_length;
 
@@ -77,7 +78,7 @@ export default class CMemoryTag {
         }
         // Set value
         memory_tag.tag = tag;
-        // Protect explicit_control_evaluator
+        // Protect data
         view.protect(0, CMemoryTag.byte_length);
         return memory_tag;
     }

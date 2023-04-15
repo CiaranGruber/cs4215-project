@@ -10,12 +10,11 @@
 /**
  * Contains the context behind which the explicit-control evaluator will run
  */
-export default class LanguageContext {
-    private static context: LanguageContext;
+export default class GlobalContext {
+    private static context: GlobalContext;
     private pointer_size;
 
-    private constructor(pointer_size: number) {
-        this.pointer_size = pointer_size;
+    private constructor() {
     }
 
     /**
@@ -23,12 +22,15 @@ export default class LanguageContext {
      */
     public static get pointer_size(): number {
         if (this.context === undefined) {
-            throw new ContextNotInitialisedError("Language Context has yet to be initialised");
+            throw new ContextNotInitialisedError("Global Context has yet to be initialised");
         }
 
         return this.context.pointer_size;
     }
 
+    /**
+     * The size of function pointers for the evaluator to use
+     */
     public static get function_pointer_size(): number {
         if (this.context === undefined) {
             throw new ContextNotInitialisedError("Language Context has yet to be initialised");
@@ -43,7 +45,9 @@ export default class LanguageContext {
      */
     public static initialise_instance(is_64_bit: boolean) {
         const pointer_size = is_64_bit ? 4 : 4;
-        this.context = new LanguageContext(pointer_size);
+        const context = new GlobalContext();
+        context.pointer_size = pointer_size;
+        this.context = context;
     }
 }
 

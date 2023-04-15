@@ -81,7 +81,7 @@ export default class Stash {
      */
     public static allocate_value(view: HeapDataView, memory_handler: MemoryHandler): Stash {
         const stash = new Stash(view, memory_handler);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, Stash.fixed_byte_length)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }

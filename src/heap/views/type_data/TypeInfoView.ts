@@ -14,7 +14,6 @@ import TypeQualifierView from "./TypeQualifierView";
 import TypeSpecifierView from "./type_specifier/TypeSpecifierView";
 import DeclarationSpecification from "../../../type_descriptions/DeclarationSpecification";
 import QualifiedPointer from "../../../type_descriptions/QualifiedPointer";
-import Bool from "../../../data_views/Bool";
 import UInt8 from "../../../data_views/UInt8";
 import UInt16 from "../../../data_views/UInt16";
 
@@ -23,7 +22,6 @@ import UInt16 from "../../../data_views/UInt16";
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>1 byte - Whether the given value is a function</li>
  *     <li>1 byte - The number of qualifiers (note >1 indicates it is a pointer)</li>
  *     <li>2 bytes - The size of the type specifier</li>
  *     <li>x × TypeQualifierView.byte_length - The variable size information regarding type qualification and qualified
@@ -32,9 +30,7 @@ import UInt16 from "../../../data_views/UInt16";
  * </ul>
  */
 export default class TypeInfoView {
-    private static readonly is_function_offset = 0;
-    private static readonly is_function_length = Bool.byte_length;
-    private static readonly qualifier_count_offset = TypeInfoView.is_function_offset + TypeInfoView.is_function_length;
+    private static readonly qualifier_count_offset = 0;
     private static readonly qualifier_count_length = UInt8.byte_length;
     private static readonly specifier_size_offset = TypeInfoView.qualifier_count_offset +
         TypeInfoView.qualifier_count_length;
@@ -53,7 +49,7 @@ export default class TypeInfoView {
      * Gets the fixed size of an TypeInformation value
      */
     public static get fixed_byte_length(): number {
-        return this.is_function_length + this.qualifier_count_length + this.specifier_size_length;
+        return this.qualifier_count_length + this.specifier_size_length;
     }
 
     /**
@@ -68,7 +64,7 @@ export default class TypeInfoView {
             const type_qualifier = TypeQualifierView.from_existing(this.qualifier_view(i)).type_qualifier;
             pointers.push(new QualifiedPointer(type_qualifier));
         }
-        return new TypeInformation(declaration_specification, pointers, this.is_function);
+        return new TypeInformation(declaration_specification, pointers);
     }
 
     private qualifier_view(index: number): HeapDataView {
@@ -78,27 +74,6 @@ export default class TypeInfoView {
 
     private get specifier_view(): HeapDataView {
         return this.data.subset(this.specifier_offset, this.specifier_size);
-    }
-
-    private get is_function_view(): Bool {
-        return new Bool(this.data.subset(TypeInfoView.is_function_offset, TypeInfoView.is_function_length),
-            true);
-    }
-
-    /**
-     * Whether the given type is a function or not
-     */
-    public get is_function(): boolean {
-        // Determine if it is a pointer
-        if (this.qualifier_count > 1) {
-            return false;
-        }
-        // Determine if, given it is not a pointer, it is a function
-        return this.is_function_view.value;
-    }
-
-    private set is_function(is_function: boolean) {
-        this.is_function_view.value = is_function;
     }
 
     private get qualifier_count_view(): UInt8 {
@@ -135,12 +110,10 @@ export default class TypeInfoView {
     public static allocate_value(view: HeapDataView, type_information: TypeInformation): TypeInfoView {
         const type_info_view = new TypeInfoView(view);
         const total_size = TypeInfoView.size_required(type_information);
-        // Ensure the explicit_control_evaluator is not already protected
+        // Ensure the data is not already protected
         if (!view.is_not_protected(0, total_size)) {
             throw new SegmentationFaultError("Data to be allocated is already protected");
         }
-        // Set is_function status
-        type_info_view.is_function = type_information.is_function;
         // Set qualifiers
         type_info_view.qualifier_count = type_information.pointers.length + 1;
         TypeQualifierView.allocate_value(type_info_view.qualifier_view(0),

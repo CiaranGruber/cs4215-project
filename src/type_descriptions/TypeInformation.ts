@@ -9,10 +9,11 @@
 
 import QualifiedPointer from "./QualifiedPointer";
 import DeclarationSpecification from "./DeclarationSpecification";
-import LanguageContext from "../global_context/LanguageContext";
+import GlobalContext from "../global_context/GlobalContext";
 import PointerCaster from "./type_casting/PointerCaster";
 import ImmutableDataView from "../heap/ImmutableDataView";
 import {build_qualifier} from "./type_qualifier/TypeQualifier";
+import {TypeSpecifierType} from "./type_specifier/TypeSpecifier";
 
 /**
  * Contains the information about a given type
@@ -26,34 +27,43 @@ export default class TypeInformation {
     /**
      * The fully qualified pointers
      */
-    public readonly pointers: Array<QualifiedPointer>;
-    /**
-     * Whether the given type is a function or function pointer
-     */
-    public readonly is_function: boolean;
+    private readonly _pointers: Array<QualifiedPointer>;
 
-    /**
-     * Initialises a new TypeInformation instance with the given declaration specification and relevant pointers
-     * @param declaration_specification The declaration specification
-     * @param pointers The set of pointers used for the type information
-     * @param is_function Whether the given type is a function
-     */
-    public constructor(declaration_specification: DeclarationSpecification, pointers: Array<QualifiedPointer>,
-                       is_function: boolean) {
+    public constructor(declaration_specification: DeclarationSpecification, pointers: Array<QualifiedPointer>) {
         this.declaration_specifier = declaration_specification;
-        this.pointers = pointers;
-        this.is_function = is_function;
+        this._pointers = pointers;
     }
 
     /**
-     * Gets the explicit_control_evaluator size of the given type
+     * Gets the pointers associated with the given TypeInformation
+     */
+    public get pointers(): Array<QualifiedPointer> {
+        return this._pointers.slice(0);
+    }
+
+    /**
+     * Clones the TypeInformation instance
+     */
+    public clone(): TypeInformation {
+        return new TypeInformation(this.declaration_specifier, this._pointers.slice(0));
+    }
+
+    /**
+     * Determines whether the given type is a function or not
+     */
+    public get is_function(): boolean {
+        return this.declaration_specifier.specifier.type === TypeSpecifierType.FUNCTION && !this.is_pointer;
+    }
+
+    /**
+     * Gets the data size of the given type
      */
     public get data_size(): number {
         // Return pointer size if it is a pointer
-        if (this.pointers.length > 0) {
-            return LanguageContext.pointer_size;
+        if (this._pointers.length > 0) {
+            return GlobalContext.pointer_size;
         }
-        // Return size of the explicit_control_evaluator
+        // Return size of the data
         return this.declaration_specifier.specifier.data_size;
     }
 
@@ -61,7 +71,7 @@ export default class TypeInformation {
      * Determines whether the given type is represented as a pointer or not
      */
     public get is_pointer(): boolean {
-        return this.pointers.length > 0;
+        return this._pointers.length > 0;
     }
 
     /**
@@ -77,9 +87,9 @@ export default class TypeInformation {
     }
 
     /**
-     * Casts the given explicit_control_evaluator to the current type
+     * Casts the given data to the current type
      * @param src The source type information
-     * @param data_view The explicit_control_evaluator that is to be cast
+     * @param data_view The data that is to be cast
      */
     public cast_data(src: TypeInformation, data_view: ImmutableDataView): ArrayBuffer {
         // Return pointer cast
@@ -93,19 +103,22 @@ export default class TypeInformation {
     /**
      * References the type by adding a non-qualified pointer
      */
-    public ref() {
-        this.pointers.unshift(new QualifiedPointer(build_qualifier([])));
+    public ref(): TypeInformation {
+        const pointers = this.pointers;
+        pointers.unshift(new QualifiedPointer(build_qualifier([])));
+        return new TypeInformation(this.declaration_specifier, pointers);
     }
 
     /**
      * Dereferences the type by one
      */
-    public deref() {
+    public deref(): TypeInformation {
         if (this.is_pointer) {
-            this.pointers.pop();
-        } else {
-            throw new CannotDereferenceLiteralError(`Literal of type '${this.to_string()}' cannot be dereferenced`);
+            const pointers = this.pointers;
+            pointers.pop();
+            return new TypeInformation(this.declaration_specifier, pointers);
         }
+        throw new CannotDereferenceLiteralError(`Literal of type '${this.to_string()}' cannot be dereferenced`);
     }
 
     public to_string() {

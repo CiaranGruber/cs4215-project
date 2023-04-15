@@ -126,7 +126,7 @@ class ConstQualifier extends QualifierDecorator {
     }
 
     public convert_assign_view(assign_data: DataView): DataView {
-        // Prevents the explicit_control_evaluator in the DataView from being edited
+        // Prevents the data in the DataView from being edited
         const base_view = super.convert_assign_view(assign_data);
         return new ImmutableDataView(base_view);
     }

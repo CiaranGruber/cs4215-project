@@ -10,7 +10,7 @@
 import {bytes_to_string} from "./RestrictedHeap";
 
 /**
- * Represents a type of explicit_control_evaluator view that allows for individual bit manipulation
+ * Represents a type of data view that allows for individual bit manipulation
  */
 export default class BitArray {
     private _buffer: DataView;

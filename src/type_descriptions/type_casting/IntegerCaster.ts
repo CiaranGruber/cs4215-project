@@ -10,19 +10,20 @@ import TypeInformation from "../TypeInformation";
 import {InvalidCastError} from "../type_specifier/built_in_types/BuiltInTypeMultiset";
 import GenericTypeCaster, {basic_padding_cast} from "./GenericTypeCaster";
 import {BuiltInTypeSpecifier, TypeSpecifierType} from "../type_specifier/TypeSpecifier";
-import LanguageContext from "../../global_context/LanguageContext";
+import GlobalContext from "../../global_context/GlobalContext";
 import {BuiltInMultisetDescription} from "../type_specifier/built_in_types/BuiltInMultisetDescription";
 
 /**
  * Used for casting objects to an integer type (including shorts/longs)
  */
 export default class IntegerCaster extends GenericTypeCaster {
-    private static readonly basic_cast: Array<TypeSpecifierType> = [TypeSpecifierType.BUILT_IN_MULTISET];
+    private static get basic_cast(): Array<TypeSpecifierType> { return [TypeSpecifierType.BUILT_IN_MULTISET,
+        TypeSpecifierType.FUNCTION] }
     private readonly data_size: number;
 
     /**
      * Constructs a new IntegerCaster
-     * @param data_size The size of the integer explicit_control_evaluator
+     * @param data_size The size of the integer data
      */
     public constructor(data_size: number) {
         super();
@@ -35,9 +36,11 @@ export default class IntegerCaster extends GenericTypeCaster {
         if (src.is_pointer || src.is_function || IntegerCaster.basic_cast.includes(src_specifier.type)) {
             let src_data_size;
             if (src.is_pointer) {
-                src_data_size = LanguageContext.pointer_size;
+                src_data_size = GlobalContext.pointer_size;
             } else if (src.is_function) {
-                src_data_size = LanguageContext.function_pointer_size;
+                src_data_size = GlobalContext.function_pointer_size;
+            } else if (src_specifier.type === TypeSpecifierType.FUNCTION) {
+                src_data_size = src_specifier.data_size;
             } else {
                 // Ensure specifier isn't a float as according to
                 const built_in_specifier = src_specifier as BuiltInTypeSpecifier;

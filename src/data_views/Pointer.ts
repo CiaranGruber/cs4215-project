@@ -8,10 +8,10 @@
  */
 
 import HeapDataView from "../heap/HeapDataView";
-import LanguageContext from "../global_context/LanguageContext";
+import GlobalContext from "../global_context/GlobalContext";
 
 /**
- * Allows viewing of Pointer explicit_control_evaluator views including for the C Heap
+ * Allows viewing of Pointer data views including for the C Heap
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
@@ -19,14 +19,14 @@ import LanguageContext from "../global_context/LanguageContext";
  * </ul>
  */
 export default class Pointer {
-    public static get byte_length() { return LanguageContext.pointer_size }
+    public static get byte_length() { return GlobalContext.pointer_size }
     private readonly overwrite_protection: boolean;
     private readonly little_endian: boolean;
     private readonly data: DataView;
 
     /**
      * Initialises a new C Pointer viewer without the ability to overwrite protected values and in big-endian format
-     * @param view The explicit_control_evaluator view with the Pointer
+     * @param view The data view with the Pointer
      */
     public constructor(view: DataView);
 
@@ -39,9 +39,9 @@ export default class Pointer {
 
     /**
      * Initialises a new C Pointer viewer with the ability to overwrite protected values
-     * @param view The explicit_control_evaluator view with the Pointer
+     * @param view The data view with the Pointer
      * @param overwrite_protection Whether to overwrite protection (Not used for non-HeapDataView instances)
-     * @param little_endian Whether to use little-endian format for explicit_control_evaluator
+     * @param little_endian Whether to use little-endian format for data
      */
     public constructor(view: DataView, overwrite_protection: boolean, little_endian: boolean);
 
