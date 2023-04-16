@@ -52,7 +52,7 @@ export default class TypeQualifierView {
         // Build qualifier list
         const qualifiers = new Array<TypeQualifierType>();
         if (this.is_const) qualifiers.push(TypeQualifierType.CONST);
-        if (this.is_atomic) qualifiers.push(TypeQualifierType.ATOMIC);
+        if (this.is_atomic) qualifiers.push(TypeQualifierType._ATOMIC);
         if (this.is_restrict) qualifiers.push(TypeQualifierType.RESTRICT);
         if (this.is_volatile) qualifiers.push(TypeQualifierType.VOLATILE);
         // Build and return qualifier

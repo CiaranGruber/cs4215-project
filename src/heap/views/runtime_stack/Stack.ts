@@ -80,16 +80,16 @@ export default class Stack implements MemoryHandler {
      * Declares a variable without setting the value
      * @param name The name of the variable to declare
      */
-    public declare_variable(name: string);
+    public declare_variable(name: string): void;
 
     /**
      * Declares the variable with the set value
      * @param name The name of the value
      * @param value The value to declare with
      */
-    public declare_variable(name: string, value: CValue);
+    public declare_variable(name: string, value: CValue): void;
 
-    public declare_variable(name: string, value?: CValue) {
+    public declare_variable(name: string, value?: CValue): void {
         const curr_offset = this.curr_frame_offset;
         const frame_size = BlockFrame.byte_length(this.data.subset(curr_offset, BlockFrame.fixed_byte_length));
         const frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);

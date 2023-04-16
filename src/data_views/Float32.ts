@@ -1,7 +1,7 @@
 /**
  * Float32
  *
- * Represents a Float32 for use by the evaluator within C Memory
+ * Represents a Float32 for use by the antlr_parser within C Memory
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

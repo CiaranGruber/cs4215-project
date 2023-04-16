@@ -1,7 +1,7 @@
 /**
  * Stash
  *
- * Represents the stash for the C explicit-control evaluator containing values in working memory
+ * Represents the stash for the C explicit-control antlr_parser containing values in working memory
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

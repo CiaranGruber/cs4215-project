@@ -1,7 +1,7 @@
 /**
  * CString
  *
- * Represents a String for use by the evaluator within C Memory
+ * Represents a String for use by the antlr_parser within C Memory
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -10,7 +10,7 @@
 import HeapDataView from "../heap/HeapDataView";
 
 /**
- * Represents a String for use by the evaluator within C Memory
+ * Represents a String for use by the antlr_parser within C Memory
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">

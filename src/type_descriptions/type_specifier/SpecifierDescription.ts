@@ -10,8 +10,10 @@
 /**
  * Used to describe a multiset
  */
-export enum BuiltInMultisetDescription {
+export enum SpecifierDescription {
     IS_INTEGER,
     IS_FLOAT,
-    IS_VOID
+    IS_VOID,
+    IS_ARITHMETIC,
+    IS_POINTER,
 }

@@ -1,7 +1,7 @@
 /**
  * CMemory
  *
- * A representation of the memory used for the C evaluator
+ * A representation of the memory used for the C antlr_parser
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

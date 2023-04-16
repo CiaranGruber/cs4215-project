@@ -1,7 +1,7 @@
 /**
  * Int32
  *
- * Represents an Int32 for use by the evaluator within C Memory
+ * Represents an Int32 for use by the antlr_parser within C Memory
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

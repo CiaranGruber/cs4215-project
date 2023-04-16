@@ -1,7 +1,7 @@
 /**
  * CFunction
  *
- * The function object used to run a function with the C evaluator
+ * The function object used to run a function with the C antlr_parser
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -10,7 +10,7 @@ import CValue from "../explicit-control-evaluator/CValue";
 import CMemory from "../heap/CMemory";
 
 /**
- * The function object used to run a function with the C evaluator
+ * The function object used to run a function with the C antlr_parser
  */
 export default abstract class CFunction {
     /**

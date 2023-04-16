@@ -16,6 +16,7 @@ import CMemory from "../../heap/CMemory";
 import FunctionPointer from "../../data_views/FunctionPointer";
 import FunctionCaster from "../type_casting/FunctionCaster";
 import TypeInformation from "../TypeInformation";
+import {SpecifierDescription} from "./SpecifierDescription";
 
 /**
  * Determines the type of type specifier. May include built-in types or user-defined types such as structs or unions
@@ -53,6 +54,12 @@ export default abstract class TypeSpecifier {
      * Gets the object used to cast values to the given type
      */
     public abstract get caster(): GenericTypeCaster;
+
+    /**
+     * Determines whether the specifier can be described with the given description
+     * @param description The description to test against
+     */
+    public abstract is_described_as(description: SpecifierDescription): boolean;
 }
 
 export class FunctionTypeSpecifier extends TypeSpecifier {
@@ -69,6 +76,11 @@ export class FunctionTypeSpecifier extends TypeSpecifier {
 
     public get data_size() {
         return FunctionPointer.byte_length;
+    }
+
+    is_described_as(description: SpecifierDescription): boolean {
+        const descriptions = [SpecifierDescription.IS_ARITHMETIC, SpecifierDescription.IS_INTEGER];
+        return descriptions.includes(description);
     }
 
     /**
@@ -105,6 +117,10 @@ export class BuiltInTypeSpecifier extends TypeSpecifier {
     public get data_size(): number {
         return this.type_multiset.data_size;
     }
+
+    is_described_as(description: SpecifierDescription): boolean {
+        return this.type_multiset.is_described_as(description);
+    }
 }
 
 /**
@@ -124,6 +140,10 @@ export class BuiltInTypeSpecifierEnum extends TypeSpecifier {
 
     public get caster(): GenericTypeCaster {
         throw new InvalidSpecifierError("Casting to the BuiltInTypeSpecifierEnum is not allowed");
+    }
+
+    public is_described_as(description: SpecifierDescription): boolean {
+        return false;
     }
 }
 

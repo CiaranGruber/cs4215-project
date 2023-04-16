@@ -8,7 +8,7 @@
  */
 import {BuiltInTypeSpecifierType} from "./BuiltInTypeSpecifierType";
 import BuiltInTypeMultiset from "./BuiltInTypeMultiset";
-import {BuiltInMultisetDescription} from "./BuiltInMultisetDescription";
+import {SpecifierDescription} from "../SpecifierDescription";
 import GenericTypeCaster from "../../type_casting/GenericTypeCaster";
 import VoidCaster from "../../type_casting/VoidCaster";
 import IntegerCaster from "../../type_casting/IntegerCaster";
@@ -21,7 +21,7 @@ import IntegerCaster from "../../type_casting/IntegerCaster";
  * @param values The values associated with the given type
  */
 function make_basic_type_multiset(type_size: number, type_caster: GenericTypeCaster,
-                                  descriptors: Set<BuiltInMultisetDescription>,
+                                  descriptors: Set<SpecifierDescription>,
                                   values: Array<Map<BuiltInTypeSpecifierType, number>>): BuiltInTypeMultiset {
     let multiset = new BuiltInTypeMultiset(type_size, type_caster);
     values.forEach((value) => multiset.add_variation_set(value));
@@ -48,11 +48,11 @@ export default class BuiltInMultisetManager {
         }
         this._basic_type_multisets = [
             // Represents the void type
-            make_basic_type_multiset(0, new VoidCaster(), new Set([BuiltInMultisetDescription.IS_VOID]),
+            make_basic_type_multiset(0, new VoidCaster(), new Set([SpecifierDescription.IS_VOID]),
                 [new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.VOID, 1]])]),
             // Represents a char or a signed char
             make_basic_type_multiset(1, new IntegerCaster(1),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]),
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]),
                 [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.CHAR, 1]]),
                     new Map<BuiltInTypeSpecifierType, number>([
@@ -61,14 +61,14 @@ export default class BuiltInMultisetManager {
                 ]),
             // Represents an unsigned char
             make_basic_type_multiset(1, new IntegerCaster(1),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.CHAR, 1]
                     ])
                 ]),
             // Represents a signed short
             make_basic_type_multiset(2, new IntegerCaster(2),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.SHORT, 1]]),
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.SHORT, 1]
@@ -82,7 +82,7 @@ export default class BuiltInMultisetManager {
                 ]),
             // Represents the signed int and specifies that signed by itself is also an int
             make_basic_type_multiset(4, new IntegerCaster(4),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.SIGNED, 1]]),
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.INT, 1]]),
                     new Map<BuiltInTypeSpecifierType, number>([
@@ -91,7 +91,7 @@ export default class BuiltInMultisetManager {
                 ]),
             // Represents the unsigned int and specifies that unsigned by itself is also an unsigned int
             make_basic_type_multiset(4, new IntegerCaster(4),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.UNSIGNED, 1]]),
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.INT, 1]
@@ -99,7 +99,7 @@ export default class BuiltInMultisetManager {
                 ]),
             // Represents a signed long
             make_basic_type_multiset(8, new IntegerCaster(8),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.LONG, 1]]),
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1]
@@ -114,7 +114,7 @@ export default class BuiltInMultisetManager {
                 ]),
             // Represents an unsigned long
             make_basic_type_multiset(8, new IntegerCaster(8),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 1]
                     ]),
@@ -124,7 +124,7 @@ export default class BuiltInMultisetManager {
                     ])]),
             // Represents a signed long long value
             make_basic_type_multiset(8, new IntegerCaster(8),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.LONG, 2]]),
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.SIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2]
@@ -139,7 +139,7 @@ export default class BuiltInMultisetManager {
                 ]),
             // Represents an unsigned long long
             make_basic_type_multiset(8, new IntegerCaster(8),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.UNSIGNED, 1], [BuiltInTypeSpecifierType.LONG, 2]
                     ]),
@@ -149,22 +149,22 @@ export default class BuiltInMultisetManager {
                     ])
                 ]),
             make_basic_type_multiset(1, new IntegerCaster(1),
-                new Set([BuiltInMultisetDescription.IS_INTEGER]), [
+                new Set([SpecifierDescription.IS_INTEGER, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType._BOOL, 1]])
                 ]),
             // Represents a float
             make_basic_type_multiset(4, new VoidCaster(),
-                new Set([BuiltInMultisetDescription.IS_FLOAT]), [
+                new Set([SpecifierDescription.IS_FLOAT, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.FLOAT, 1]])
                 ]),
             // Represents a double
             make_basic_type_multiset(8, new VoidCaster(),
-                new Set([BuiltInMultisetDescription.IS_FLOAT]), [
+                new Set([SpecifierDescription.IS_FLOAT, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.DOUBLE, 1]])
                 ]),
             // Represents a long double
             make_basic_type_multiset(8, new VoidCaster(),
-                new Set([BuiltInMultisetDescription.IS_FLOAT]), [
+                new Set([SpecifierDescription.IS_FLOAT, SpecifierDescription.IS_ARITHMETIC]), [
                     new Map<BuiltInTypeSpecifierType, number>([
                         [BuiltInTypeSpecifierType.LONG, 1], [BuiltInTypeSpecifierType.DOUBLE, 1]
                     ])

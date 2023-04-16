@@ -8,7 +8,7 @@
  */
 
 /**
- * Contains the context behind which the explicit-control evaluator will run
+ * Contains the context behind which the explicit-control antlr_parser will run
  */
 export default class GlobalContext {
     private static context: GlobalContext;
@@ -29,7 +29,7 @@ export default class GlobalContext {
     }
 
     /**
-     * The size of function pointers for the evaluator to use
+     * The size of function pointers for the antlr_parser to use
      */
     public static get function_pointer_size(): number {
         if (this.context === undefined) {

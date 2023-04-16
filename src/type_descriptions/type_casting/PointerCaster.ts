@@ -11,7 +11,7 @@ import {InvalidCastError} from "../type_specifier/built_in_types/BuiltInTypeMult
 import GenericTypeCaster, {basic_padding_cast} from "./GenericTypeCaster";
 import {BuiltInTypeSpecifier, TypeSpecifierType} from "../type_specifier/TypeSpecifier";
 import GlobalContext from "../../global_context/GlobalContext";
-import {BuiltInMultisetDescription} from "../type_specifier/built_in_types/BuiltInMultisetDescription";
+import {SpecifierDescription} from "../type_specifier/SpecifierDescription";
 
 /**
  * Used to cast values to a pointer type
@@ -35,7 +35,7 @@ export default class PointerCaster extends GenericTypeCaster {
             } else {
                 // Ensure specifier isn't a float as according to spec
                 const built_in_specifier = src_specifier as BuiltInTypeSpecifier;
-                if (built_in_specifier.type_multiset.is_described_as(BuiltInMultisetDescription.IS_FLOAT)) {
+                if (built_in_specifier.type_multiset.is_described_as(SpecifierDescription.IS_FLOAT)) {
                     throw new InvalidCastError("Cannot cast float value to a pointer")
                 }
                 src_data_size = built_in_specifier.data_size;

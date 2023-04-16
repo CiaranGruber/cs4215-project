@@ -14,6 +14,7 @@ import PointerCaster from "./type_casting/PointerCaster";
 import ImmutableDataView from "../heap/ImmutableDataView";
 import {build_qualifier} from "./type_qualifier/TypeQualifier";
 import {TypeSpecifierType} from "./type_specifier/TypeSpecifier";
+import {SpecifierDescription} from "./type_specifier/SpecifierDescription";
 
 /**
  * Contains the information about a given type
@@ -119,6 +120,19 @@ export default class TypeInformation {
             return new TypeInformation(this.declaration_specifier, pointers);
         }
         throw new CannotDereferenceLiteralError(`Literal of type '${this.to_string()}' cannot be dereferenced`);
+    }
+
+    /**
+     * Determines if the given type can be described using the descriptor
+     * @param descriptor The descriptor to test
+     */
+    public is_described_as(descriptor: SpecifierDescription): boolean {
+        if (this.is_pointer) {
+            const pointer_descriptions = [SpecifierDescription.IS_POINTER,
+                SpecifierDescription.IS_ARITHMETIC];
+            return pointer_descriptions.includes(descriptor);
+        }
+        return this.declaration_specifier.specifier.is_described_as(descriptor);
     }
 
     public to_string() {

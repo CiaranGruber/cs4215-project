@@ -11,7 +11,7 @@ import {InvalidCastError} from "../type_specifier/built_in_types/BuiltInTypeMult
 import GenericTypeCaster, {basic_padding_cast} from "./GenericTypeCaster";
 import {BuiltInTypeSpecifier, TypeSpecifierType} from "../type_specifier/TypeSpecifier";
 import GlobalContext from "../../global_context/GlobalContext";
-import {BuiltInMultisetDescription} from "../type_specifier/built_in_types/BuiltInMultisetDescription";
+import {SpecifierDescription} from "../type_specifier/SpecifierDescription";
 
 /**
  * Used for casting objects to an integer type (including shorts/longs)
@@ -46,7 +46,7 @@ export default class IntegerCaster extends GenericTypeCaster {
                 const built_in_specifier = src_specifier as BuiltInTypeSpecifier;
                 src_data_size = built_in_specifier.data_size;
                 // Cast value from float
-                if (built_in_specifier.type_multiset.is_described_as(BuiltInMultisetDescription.IS_FLOAT)) {
+                if (built_in_specifier.type_multiset.is_described_as(SpecifierDescription.IS_FLOAT)) {
                     throw new Error("Casting from a float is not implemented yet");
                 }
             }

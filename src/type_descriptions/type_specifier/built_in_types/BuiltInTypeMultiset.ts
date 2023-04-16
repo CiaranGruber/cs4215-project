@@ -8,7 +8,7 @@
  */
 
 import {BuiltInTypeSpecifierType} from "./BuiltInTypeSpecifierType";
-import {BuiltInMultisetDescription} from "./BuiltInMultisetDescription";
+import {SpecifierDescription} from "../SpecifierDescription";
 import GenericTypeCaster from "../../type_casting/GenericTypeCaster";
 
 /**
@@ -16,7 +16,7 @@ import GenericTypeCaster from "../../type_casting/GenericTypeCaster";
  */
 export default class BuiltInTypeMultiset {
     private variations: Array<Map<BuiltInTypeSpecifierType, number>>;
-    private descriptors: Set<BuiltInMultisetDescription>;
+    private descriptors: Set<SpecifierDescription>;
     public readonly caster: GenericTypeCaster;
     private readonly type_size: number;
 
@@ -26,7 +26,7 @@ export default class BuiltInTypeMultiset {
      * @param caster The type caster to use to cast objects to this type
      */
     constructor(type_size: number, caster: GenericTypeCaster) {
-        this.descriptors = new Set<BuiltInMultisetDescription>();
+        this.descriptors = new Set<SpecifierDescription>();
         this.variations = [];
         this.type_size = type_size;
         this.caster = caster;
@@ -44,7 +44,7 @@ export default class BuiltInTypeMultiset {
      * Adds the given descriptor to the multiset
      * @param descriptor The descriptor used to describe the multiset
      */
-    public add_descriptor(descriptor: BuiltInMultisetDescription) {
+    public add_descriptor(descriptor: SpecifierDescription) {
         this.descriptors.add(descriptor);
     }
 
@@ -52,7 +52,7 @@ export default class BuiltInTypeMultiset {
      * Gets whether the multiset is described using the given descriptor
      * @param descriptor The descriptor to test for
      */
-    public is_described_as(descriptor: BuiltInMultisetDescription) {
+    public is_described_as(descriptor: SpecifierDescription) {
         return this.descriptors.has(descriptor);
     }
 

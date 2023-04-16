@@ -43,7 +43,7 @@ function is_type(built_in_specifier: BuiltInTypeSpecifierType, type: TypeInforma
         BuiltInMultisetManager.get_multiset_index(expected_multiset);
 }
 
-test('Testing referencing and dereferencing a value', () => {
+test('Referencing and dereferencing a value', () => {
     const memory_size = 128;
     const variable_name = "test_variable";
     const variable_ref_name = "test_variable_2";

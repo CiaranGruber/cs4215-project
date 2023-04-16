@@ -16,7 +16,7 @@ export enum TypeQualifierType {
     CONST,
     RESTRICT,
     VOLATILE,
-    ATOMIC
+    _ATOMIC
 }
 
 /**
