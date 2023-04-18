@@ -60,6 +60,14 @@ export default abstract class TypeSpecifier {
      * @param description The description to test against
      */
     public abstract is_described_as(description: SpecifierDescription): boolean;
+
+    /**
+     * Determines whether the other TypeSpecifier is deep equivalent
+     * @param other The other type specifier to compare
+     */
+    public equals(other: TypeSpecifier): boolean {
+        return this.type === other.type;
+    }
 }
 
 export class FunctionTypeSpecifier extends TypeSpecifier {
@@ -97,6 +105,13 @@ export class FunctionTypeSpecifier extends TypeSpecifier {
         return new CValue(false, this.return_type,
             this.return_type.cast_data(return_val.type_information, return_val.get_value(memory)));
     }
+
+    public equals(other: TypeSpecifier): boolean {
+        if (!super.equals(other)) {
+            return false;
+        }
+        return this.return_type.equals((other as FunctionTypeSpecifier).return_type);
+    }
 }
 
 /**
@@ -118,8 +133,15 @@ export class BuiltInTypeSpecifier extends TypeSpecifier {
         return this.type_multiset.data_size;
     }
 
-    is_described_as(description: SpecifierDescription): boolean {
+    public is_described_as(description: SpecifierDescription): boolean {
         return this.type_multiset.is_described_as(description);
+    }
+
+    public equals(other: TypeSpecifier): boolean {
+        if (!super.equals(other)) {
+            return false;
+        }
+        return this.type_multiset === (other as BuiltInTypeSpecifier).type_multiset;
     }
 }
 
@@ -144,6 +166,13 @@ export class BuiltInTypeSpecifierEnum extends TypeSpecifier {
 
     public is_described_as(description: SpecifierDescription): boolean {
         return false;
+    }
+
+    public equals(other: TypeSpecifier): boolean {
+        if (!super.equals(other)) {
+            return false;
+        }
+        return this.type_name === (other as BuiltInTypeSpecifierEnum).type_name;
     }
 }
 

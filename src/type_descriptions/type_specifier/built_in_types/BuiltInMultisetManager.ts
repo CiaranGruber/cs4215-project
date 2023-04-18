@@ -1,7 +1,7 @@
 /**
  * BuiltInMultisetManager
  *
- * Manages the available built-in multisets for C providing the relevant integer references
+ * Manages the available built-in multi-sets for C providing the relevant integer references
  * Created for CS4215 term project
  *
  * By Ciaran Gruber
@@ -30,23 +30,23 @@ function make_basic_type_multiset(type_size: number, type_caster: GenericTypeCas
 }
 
 /**
- * Contains the set of potential built-in multisets available for use within the program and manages value
+ * Contains the set of potential built-in multi-sets available for use within the program and manages value
  * representations
  */
 export default class BuiltInMultisetManager {
     /**
-     * The available basic type multisets represent Integers, Void, etc. as specified by C17 Spec 6.7.2
+     * The available basic type multi-sets represent Integers, Void, etc. as specified by C17 Spec 6.7.2
      * @private
      */
-    private static _basic_type_multisets: Array<BuiltInTypeMultiset>;
+    private static _basic_type_multi_sets: Array<BuiltInTypeMultiset>;
     /**
      * Late invocation of multiset creation to prevent JavaScript import bugs
      */
-    private static get basic_type_multisets() {
-        if (this._basic_type_multisets !== undefined) {
-            return this._basic_type_multisets;
+    private static get basic_type_multi_sets() {
+        if (this._basic_type_multi_sets) {
+            return this._basic_type_multi_sets;
         }
-        this._basic_type_multisets = [
+        this._basic_type_multi_sets = [
             // Represents the void type
             make_basic_type_multiset(0, new VoidCaster(), new Set([SpecifierDescription.IS_VOID]),
                 [new Map<BuiltInTypeSpecifierType, number>([[BuiltInTypeSpecifierType.VOID, 1]])]),
@@ -170,14 +170,14 @@ export default class BuiltInMultisetManager {
                     ])
                 ]),
         ];
-        return this._basic_type_multisets;
+        return this._basic_type_multi_sets;
     }
 
     /**
-     * Gets the full array of multisets in the manager
+     * Gets the full array of multi-sets in the manager
      */
     public static get multiset_array(): Array<BuiltInTypeMultiset> {
-            return BuiltInMultisetManager.basic_type_multisets;
+            return BuiltInMultisetManager.basic_type_multi_sets;
     }
 
     /**
@@ -186,14 +186,14 @@ export default class BuiltInMultisetManager {
      * @returns The index of the type multiset if found; -1 if it is not found
      */
     public static get_multiset_index(type_multiset: BuiltInTypeMultiset): number {
-        return BuiltInMultisetManager.basic_type_multisets.indexOf(type_multiset);
+        return BuiltInMultisetManager.basic_type_multi_sets.indexOf(type_multiset);
     }
 
     /**
-     * Gets the multiset of the given idnex
+     * Gets the multiset of the given index
      * @param index The index of the given multiset
      */
     public static get_multiset(index: number): BuiltInTypeMultiset {
-        return BuiltInMultisetManager.basic_type_multisets[index];
+        return BuiltInMultisetManager.basic_type_multi_sets[index];
     }
 }

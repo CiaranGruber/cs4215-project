@@ -115,7 +115,7 @@ export default class Environment {
                 }
                 variable.declare();
                 // Set value if relevant
-                if (value !== undefined) {
+                if (value) {
                     const heap_view = variable.data_view;
                     heap_view.set_value(value.cast_to(variable.type_info).data);
                 }

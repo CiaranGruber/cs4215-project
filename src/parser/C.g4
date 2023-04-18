@@ -29,10 +29,13 @@
 /** C 2011 grammar built from the C11 Spec */
 grammar C;
 
+compilationUnit
+    :   translationUnit? EOF
+    ;
 
 primaryExpression
     :   Identifier
-    |   Constant
+    |   constant
     |   StringLiteral+
     |   '(' expression ')'
     |   genericSelection
@@ -54,15 +57,12 @@ genericAssociation
     ;
 
 postfixExpression
-    :
-    (   primaryExpression
+    :   primaryExpression
+    |   postfixExpression '[' expression ']'
+    |   postfixExpression '(' argumentExpressionList? ')'
+    |   postfixExpression ( '.' | '->' ) Identifier
+    |   postfixExpression ( '++' | '--' )
     |   '__extension__'? '(' typeName ')' '{' initialiserList ','? '}'
-    )
-    ('[' expression ']'
-    | '(' argumentExpressionList? ')'
-    | ('.' | '->') Identifier
-    | ('++' | '--')
-    )*
     ;
 
 argumentExpressionList
@@ -70,13 +70,11 @@ argumentExpressionList
     ;
 
 unaryExpression
-    :
-    ('++' |  '--' |  'sizeof')*
-    (postfixExpression
+    :   postfixExpression
+    |   ('++' |  '--' |  'sizeof') unaryExpression
     |   unaryOperator castExpression
     |   ('sizeof' | '_Alignof') '(' typeName ')'
     |   '&&' Identifier // GCC extension address of label
-    )
     ;
 
 unaryOperator
@@ -90,31 +88,31 @@ castExpression
     ;
 
 multiplicativeExpression
-    :   castExpression (('*'|'/'|'%') castExpression)*
+    :   castExpression (('*'|'/'|'%') multiplicativeExpression)?
     ;
 
 additiveExpression
-    :   multiplicativeExpression (('+'|'-') multiplicativeExpression)*
+    :   multiplicativeExpression (('+'|'-') additiveExpression)?
     ;
 
 shiftExpression
-    :   additiveExpression (('<<'|'>>') additiveExpression)*
+    :   additiveExpression (('<<'|'>>') shiftExpression)?
     ;
 
 relationalExpression
-    :   shiftExpression (('<'|'>'|'<='|'>=') shiftExpression)*
+    :   shiftExpression (('<'|'>'|'<='|'>=') relationalExpression)?
     ;
 
 equalityExpression
-    :   relationalExpression (('=='| '!=') relationalExpression)*
+    :   relationalExpression (('=='| '!=') equalityExpression)?
     ;
 
 andExpression
-    :   equalityExpression ( '&' equalityExpression)*
+    :   equalityExpression ( '&' andExpression)?
     ;
 
 exclusiveOrExpression
-    :   andExpression ('^' andExpression)?
+    :   andExpression ('^' exclusiveOrExpression)?
     ;
 
 inclusiveOrExpression
@@ -312,11 +310,11 @@ directDeclarator
     |   directDeclarator '(' parameterTypeList ')'
     |   directDeclarator '(' identifierList? ')'
     |   Identifier ':' DigitSequence  // bit field
-    |   vcSpecificModifer Identifier // Visual C Extension
-    |   '(' vcSpecificModifer declarator ')' // Visual C Extension
+    |   vcSpecificModifier Identifier // Visual C Extension
+    |   '(' vcSpecificModifier declarator ')' // Visual C Extension
     ;
 
-vcSpecificModifer
+vcSpecificModifier
     :   ('__cdecl'
     |   '__clrcall'
     |   '__stdcall'
@@ -496,10 +494,6 @@ jumpStatement
     ';'
     ;
 
-compilationUnit
-    :   translationUnit? EOF
-    ;
-
 translationUnit
     :   externalDeclaration+
     ;
@@ -657,37 +651,32 @@ HexQuad
     :   HexadecimalDigit HexadecimalDigit HexadecimalDigit HexadecimalDigit
     ;
 
-Constant
-    :   IntegerConstant
-    |   FloatingConstant
+constant
+    :   integerConstant
+    |   floatingConstant
     //|   EnumerationConstant
     |   CharacterConstant
     ;
 
-fragment
-IntegerConstant
+integerConstant
     :   DecimalConstant IntegerSuffix?
     |   OctalConstant IntegerSuffix?
     |   HexadecimalConstant IntegerSuffix?
     |	BinaryConstant
     ;
 
-fragment
 BinaryConstant
 	:	'0' [bB] [0-1]+
 	;
 
-fragment
 DecimalConstant
     :   NonzeroDigit Digit*
     ;
 
-fragment
 OctalConstant
     :   '0' OctalDigit*
     ;
 
-fragment
 HexadecimalConstant
     :   HexadecimalPrefix HexadecimalDigit+
     ;
@@ -712,7 +701,6 @@ HexadecimalDigit
     :   [0-9a-fA-F]
     ;
 
-fragment
 IntegerSuffix
     :   UnsignedSuffix LongSuffix?
     |   UnsignedSuffix LongLongSuffix
@@ -735,19 +723,16 @@ LongLongSuffix
     :   'll' | 'LL'
     ;
 
-fragment
-FloatingConstant
+floatingConstant
     :   DecimalFloatingConstant
     |   HexadecimalFloatingConstant
     ;
 
-fragment
 DecimalFloatingConstant
     :   FractionalConstant ExponentPart? FloatingSuffix?
     |   DigitSequence ExponentPart FloatingSuffix?
     ;
 
-fragment
 HexadecimalFloatingConstant
     :   HexadecimalPrefix (HexadecimalFractionalConstant | HexadecimalDigitSequence) BinaryExponentPart FloatingSuffix?
     ;
@@ -793,12 +778,15 @@ FloatingSuffix
     :   [flFL]
     ;
 
-fragment
 CharacterConstant
-    :   '\'' CCharSequence '\''
-    |   'L\'' CCharSequence '\''
-    |   'u\'' CCharSequence '\''
-    |   'U\'' CCharSequence '\''
+    :   CharEncodingPrefix? '\'' CCharSequence '\''
+    ;
+
+fragment
+CharEncodingPrefix
+    :   'L'
+    |   'u'
+    |   'U'
     ;
 
 fragment
@@ -839,7 +827,6 @@ StringLiteral
     :   EncodingPrefix? '"' SCharSequence? '"'
     ;
 
-fragment
 EncodingPrefix
     :   'u8'
     |   'u'

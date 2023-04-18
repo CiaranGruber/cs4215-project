@@ -97,13 +97,6 @@ export default class VariableMem {
     }
 
     /**
-     * Gets whether the variable is a function or not (not including function pointers)
-     */
-    public get is_function(): boolean {
-        return TypeInfoView.from_existing(this.type_info_view).type_information.is_function;
-    }
-
-    /**
      * Gets the value for the VariableMem
      */
     public get value(): CValue {

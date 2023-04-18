@@ -18,10 +18,15 @@ import TypeInformation from "../type_descriptions/TypeInformation";
 import VoidConverter from "../converter/VoidConverter";
 import Agenda from "./Agenda";
 import {Instruction} from "./Instruction";
-import {create_base_instruction} from "./antlr_parser/ExplicitControlListener";
-import FunctionPointer from "../data_views/FunctionPointer";
-import CValue from "./CValue";
+import {create_base_instruction} from "./ExplicitControlListener";
+import FunctionPointerConverter from "../converter/FunctionPointerConverter";
+import DeclarationSpecification from "../type_descriptions/DeclarationSpecification";
 
+/**
+ * Adds the required built-ins to the given evaluator
+ * @param memory The memory used for the evaluator
+ * @param function_manager The function manager used to manage functions for a built-in
+ */
 function add_built_ins(memory: CMemory, function_manager: FunctionManager) {
     const stack = memory.stack;
     const declarations: Array<VariableDeclaration> = [];
@@ -32,34 +37,44 @@ function add_built_ins(memory: CMemory, function_manager: FunctionManager) {
     const void_pointer_conv = new PointerConverter([BuiltInTypeSpecifierType.VOID], 1);
     // Create function type
 
-    function add_built_in(name: string, func: BuiltInFunction, function_type: TypeInformation) {
+    function add_built_in_function(name: string, func: BuiltInFunction, return_type: TypeInformation) {
         const func_key = function_manager.add_function(func);
-        declarations.push(new VariableDeclaration(function_type, name));
+        const function_specification = DeclarationSpecification.function_specifier(return_type);
+        declarations.push(new VariableDeclaration(new TypeInformation(function_specification, []), name));
         name_to_key.set(name, func_key);
-        name_to_type.set(name, function_type);
+        name_to_type.set(name, return_type);
     }
 
     // Add relevant functions
-    add_built_in("malloc", new BuiltInFunction((args) => memory.malloc(args[0] as number),
+    add_built_in_function("malloc", new BuiltInFunction((args) => memory.malloc(args[0] as number),
         void_pointer_conv, [new IntConverter()]), void_pointer_conv.type);
-    add_built_in("free", new BuiltInFunction((args) => memory.free(args[0] as number),
+    add_built_in_function("free", new BuiltInFunction((args) => memory.free(args[0] as number),
         new VoidConverter(), [void_pointer_conv]), VoidConverter.type);
-    add_built_in("defragment", new BuiltInFunction(() => memory.defragment(), new VoidConverter(),
+    add_built_in_function("defragment", new BuiltInFunction(() => memory.defragment(), new VoidConverter(),
         []), VoidConverter.type);
+    add_built_in_function("print_int", new BuiltInFunction((args) => console.log(args[0] as number),
+        new VoidConverter(), [new IntConverter()]), IntConverter.type);
 
+    // Enters the given block
     stack.enter_block(declarations);
     name_to_key.forEach((value, key) => {
-        const func_value = new CValue(false, name_to_type.get(key), FunctionPointer.create_buffer(value));
+        const func_value = new FunctionPointerConverter(name_to_type.get(key)).convert_to_c(value);
         stack.declare_variable(key, func_value);
     });
 }
 
+/**
+ * The explicit control evaluator containing the main memory for C
+ */
 export default class ExplicitControlEvaluator {
     private initialised: boolean;
     private _memory: CMemory;
     private _function_manager: FunctionManager;
     private agenda: Agenda;
 
+    /**
+     * Constructs a new ExplicitControlEvaluator instance
+     */
     public constructor() {
         this.initialised = false;
     }
@@ -99,7 +114,7 @@ export default class ExplicitControlEvaluator {
      */
     public run(): number {
         let instruction = this.agenda.pop();
-        while (instruction !== undefined) {
+        while (instruction) {
             instruction.run_instruction(this);
             instruction = this.agenda.pop();
         }

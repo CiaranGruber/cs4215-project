@@ -19,7 +19,7 @@ import Pointer from "../../../data_views/Pointer";
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>CMemoryTag.byte_length - The tag representing if it is a blockframe or a callframe</li>
+ *     <li>CMemoryTag.byte_length - The tag representing if it is a block frame or a call frame</li>
  *     <li>4 bytes - The size of the environment</li>
  *     <li>4 bytes - The size of the stash</li>
  *     <li>Pointer.byte_length - The address of the previous scope definition</li>
@@ -46,9 +46,9 @@ export default class FrameHeader {
     }
 
     /**
-     * Determines whether the header is the header for a callframe. Alternative is a call frame
+     * Determines whether the header is the header for a call frame. Alternative is a call frame
      */
-    public static is_callframe(view: HeapDataView): boolean {
+    public static is_call_frame(view: HeapDataView): boolean {
         return CMemoryTag.from_existing(view.subset(this.tag_offset, CMemoryTag.byte_length)).tag === CMemoryTagValue.CALL_FRAME;
     }
 
@@ -118,7 +118,6 @@ export default class FrameHeader {
      * @param view The view used to change the heap values
      * @param prev_frame_addr The address to the previous frame
      * @param tag The tag to use for the FrameHeader
-     * environment (first blockframe)
      * @param environment_size The size of the environment that is to be stored
      */
     public static allocate_value(view: HeapDataView, prev_frame_addr: number, tag: CMemoryTagValue,
@@ -139,8 +138,8 @@ export default class FrameHeader {
     }
 
     /**
-     * Initialises a new Callframe view from an existing value
-     * @param view The view for the Callframe to build from
+     * Initialises a new FrameHeader view from an existing value
+     * @param view The view for the FrameHeader to build from
      */
     public static from_existing(view: HeapDataView): FrameHeader {
         return new FrameHeader(view);

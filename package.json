@@ -23,10 +23,10 @@
     ]
   },
   "scripts": {
-    "compile-g4": "compile-C.bat",
+    "compile-g4": "bash ./scripts/compile-C.bat",
     "build": "npm run build_js && npm run fix_imports",
     "build_js": "tsc --build",
-    "fix_imports": "python build_script.py",
+    "fix_imports": "python scripts/build_script.py -p \"(import .* (?!\\\"antlr4\\\"|\\\".*\\.js\\\")\\\".*)(\\\";)\" -r \"\\1.js\\2\" -d \"build\"",
     "test": "jest"
   },
   "type": "module"

@@ -1,7 +1,7 @@
 /**
  * MallocVar
  *
- * Represents a variable in the C Heap that acts as a mallocced variable
+ * Represents a variable in the C Heap that acts as a memory allocated variable
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

@@ -13,13 +13,13 @@ class DeclaratorVisitor extends CVisitor<string> {
 
     // @ts-ignore
     visitDirectDeclarator(ctx: DirectDeclaratorContext) {
-        if (ctx.Identifier() !== null && ctx.DigitSequence() === null) {
+        if (ctx.Identifier() && !ctx.DigitSequence()) {
             return ctx.Identifier().getText();
         }
-        if (ctx.declarator() !== null) {
+        if (ctx.declarator()) {
             return ctx.declarator().accept(this);
         }
-        if (ctx.directDeclarator() !== null) {
+        if (ctx.directDeclarator()) {
             return ctx.directDeclarator().accept(this);
         }
     }

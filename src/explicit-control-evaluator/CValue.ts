@@ -74,7 +74,7 @@ export default class CValue {
      * Dereferences the CValue and turns it into an lvalue and dereferences if it already is one
      */
     public deref(memory: CMemory): CValue {
-        // Functions should allow dereferencing but do nothing
+        // Functions should allow dereferencing but will do nothing
         if (!this.type_information.is_function) {
             const clone_type = this.type_information.deref();
             // Don't dereference unless it is already a lvalue
@@ -96,6 +96,18 @@ export default class CValue {
             return memory.get_data_view(pointer.value, this.type_information.data_size);
         }
         return new ImmutableDataView(this._data);
+    }
+
+    /**
+     * Gets the CValue that the CValue points to
+     */
+    public get_c_value(memory: CMemory): CValue {
+        if (this.is_l_value) {
+            const pointer = new Pointer(new ImmutableDataView(this._data));
+            const data_view = memory.get_data_view(pointer.value, this.type_information.data_size);
+            return new CValue(false, this.type_information, data_view.referenced_buffer);
+        }
+        return this;
     }
 
     /**

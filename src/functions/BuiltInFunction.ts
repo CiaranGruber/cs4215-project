@@ -38,7 +38,8 @@ export default class BuiltInFunction extends CFunction {
         if (args.length !== this.args_converters.length) {
             throw new InvalidArgumentCountError("Not enough arguments passed into the function");
         }
-        const converted_args = args.map((value, index) => this.args_converters[index].convert_to_js(value));
+        const converted_args = args.map((value, index) =>
+            this.args_converters[index].convert_to_js(value.get_c_value(memory)));
         const return_val = this.built_in(converted_args);
         return this.return_converter.convert_to_c(return_val);
     }

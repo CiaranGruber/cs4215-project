@@ -43,13 +43,6 @@ export default class TypeInformation {
     }
 
     /**
-     * Clones the TypeInformation instance
-     */
-    public clone(): TypeInformation {
-        return new TypeInformation(this.declaration_specifier, this._pointers.slice(0));
-    }
-
-    /**
      * Determines whether the given type is a function or not
      */
     public get is_function(): boolean {
@@ -102,7 +95,27 @@ export default class TypeInformation {
     }
 
     /**
-     * References the type by adding a non-qualified pointer
+     * Determines whether the given type information equals another
+     * @param other The other type information to compare
+     */
+    public equals(other: TypeInformation) {
+        // Test if the specifier is the same
+        if (!this.declaration_specifier.equals(other.declaration_specifier)) {
+            return false;
+        }
+        // Check pointer length
+        if (this._pointers.length !== other._pointers.length) {
+            return false;
+        }
+        // Check if the pointers are equivalent
+        for (let i = 0; i < this._pointers.length; i++) {
+            this._pointers[i].equals(other._pointers[i]);
+        }
+        return true;
+    }
+
+    /**
+     * References the type by adding an unqualified pointer
      */
     public ref(): TypeInformation {
         const pointers = this.pointers;

@@ -77,24 +77,6 @@ export default class MallocData {
         return malloc_data;
     }
 
-    /**
-     * Determines whether a set of data is a MallocVar instance
-     * @param view The data view
-     */
-    public static is_instance(view: HeapDataView): boolean {
-        if (view.byte_length < MallocData.byte_length) {
-            return false;
-        }
-        // Check if header is protected
-        const header_is_protected = view.is_protected(0, MallocData.byte_length);
-        if (!header_is_protected) {
-            return false;
-        }
-        // Ensure tags are one of the valid options
-        const malloc_data = MallocData.from_existing(view);
-        return malloc_data.tag === CMemoryTagValue.MALLOC_EMPTY || malloc_data.tag === CMemoryTagValue.MALLOC_VAR;
-    }
-
     public static from_existing(view: HeapDataView): MallocData {
         return new MallocData(view);
     }

@@ -79,4 +79,15 @@ export default class DeclarationSpecification {
         return DeclarationSpecification.from_existing_specs(new FunctionTypeSpecifier(return_type),
             build_qualifier([TypeQualifierType.CONST]));
     }
+
+    /**
+     * Determines whether the given specification is equivalent to another through deep equality
+     * @param other The other specification to compare
+     */
+    public equals(other: DeclarationSpecification): boolean {
+        if (!this.qualifier.equals(other.qualifier)) {
+            return false;
+        }
+        return this.specifier.equals(other.specifier);
+    }
 }

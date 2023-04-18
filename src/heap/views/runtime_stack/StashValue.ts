@@ -85,13 +85,6 @@ export default class StashValue {
         return TypeInfoView.from_existing(this.type_info_view).type_information;
     }
 
-    /**
-     * Gets whether the stash value is a function or not (not including function pointers)
-     */
-    public get is_function(): boolean {
-        return TypeInfoView.from_existing(this.type_info_view).type_information.is_function;
-    }
-
     private get type_info_size_view(): UInt16 {
         return new UInt16(this.data.subset(StashValue.type_info_size_offset, StashValue.type_info_size_length),
             true);
@@ -170,7 +163,9 @@ export default class StashValue {
         heap_variable.data_size = data_size;
         heap_variable.type_info_size = type_info_size;
         heap_variable.prev_offset = prev_stash_value;
-        heap_variable.data_view.set_value(variable.data);
+        if (data_size > 0) {
+            heap_variable.data_view.set_value(variable.data);
+        }
         // Set information
         TypeInfoView.allocate_value(heap_variable.type_info_view, variable.type_information);
         // Protect information about the stash value

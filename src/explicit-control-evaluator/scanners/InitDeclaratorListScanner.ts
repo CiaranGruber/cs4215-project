@@ -5,15 +5,12 @@ import {
     DeclaratorContext,
     DirectDeclaratorContext,
     InitDeclaratorContext,
-    InitDeclaratorListContext,
-    PointerContext,
-    TypeQualifierContext,
-    TypeQualifierListContext
+    InitDeclaratorListContext
 } from "../../parser/antlr_gen/CParser";
 import QualifiedPointer from "../../type_descriptions/QualifiedPointer";
-import {UnknownDefinitionError} from "./ExplicitControlListener";
+import {UnknownDefinitionError} from "../ExplicitControlListener";
 import TypeInformation from "../../type_descriptions/TypeInformation";
-import TypeQualifier, {build_qualifier, TypeQualifierType} from "../../type_descriptions/type_qualifier/TypeQualifier";
+import {scan_pointers} from "./type_scanners/PointerScanner";
 
 export default function scan_for_declarations(declaration_specification: DeclarationSpecification,
                                       context: InitDeclaratorListContext): Array<VariableDeclaration> {
@@ -57,7 +54,7 @@ class InitDeclaratorScanner extends CVisitor<VariableDeclaration> {
     visitInitDeclarator(ctx: InitDeclaratorContext): VariableDeclaration {
         const declaration = ctx.declarator().accept(this);
         // Ensure it is not assigning to a function
-        if (ctx.Assign() !== null && declaration.type_information.is_function) {
+        if (ctx.Assign() && declaration.type_information.is_function) {
             throw new UnknownDefinitionError("Cannot initialise a function like a variable");
         }
         return declaration;
@@ -65,11 +62,11 @@ class InitDeclaratorScanner extends CVisitor<VariableDeclaration> {
 
     // @ts-ignore
     visitDeclarator(ctx: DeclaratorContext): VariableDeclaration {
-        if (ctx.pointer() !== null) {
+        if (ctx.pointer()) {
             if (this.is_function) {
-                this.function_pointers.push(...ctx.pointer().accept(new PointerScanner()));
+                this.function_pointers.push(...scan_pointers(ctx.pointer()));
             } else {
-                this.pointers.push(...ctx.pointer().accept(new PointerScanner()));
+                this.pointers.push(...scan_pointers(ctx.pointer()));
             }
         }
         return ctx.directDeclarator().accept(this);
@@ -87,55 +84,18 @@ class InitDeclaratorScanner extends CVisitor<VariableDeclaration> {
 
     // @ts-ignore
     visitDirectDeclarator(ctx: DirectDeclaratorContext): VariableDeclaration {
-        if (ctx.Identifier() !== null && ctx.DigitSequence() === null) { // Final identifier
-            return new VariableDeclaration(this.make_type_information(), ctx.Identifier().getText());
+        if (ctx.Identifier() && !ctx.DigitSequence()) { // Final identifier
+            return new VariableDeclaration(this.make_type_information(), ctx.Identifier().symbol.text);
         }
-        if (ctx.declarator() !== null) { // Declarator in brackets
+        if (ctx.declarator()) { // Declarator in brackets
             return ctx.declarator().accept(this);
         }
-        if (ctx.parameterTypeList() !== null) { // Function definition (May be a pointer)
+        if (ctx.parameterTypeList()) { // Function definition (Could be a pointer)
             if (this.is_function) {
                 throw new UnknownDefinitionError("A function cannot return another function");
             }
             this.is_function = true;
             return ctx.directDeclarator().accept(this);
         }
-    }
-}
-
-class PointerScanner extends CVisitor<Array<QualifiedPointer>> {
-    // @ts-ignore
-    visitPointer(ctx: PointerContext) {
-        const type_qualifier = ctx.typeQualifierList().accept(new TypeQualifierListScanner());
-        const pointers = [new QualifiedPointer(type_qualifier)];
-        if (ctx.pointer() !== null) {
-            pointers.push(...ctx.pointer().accept(this));
-        }
-        return pointers;
-    }
-}
-
-class TypeQualifierListScanner extends CVisitor<TypeQualifier> {
-    // @ts-ignore
-    visitTypeQualifierList(ctx: TypeQualifierListContext) {
-        const qualifiers: Array<TypeQualifierType> = [];
-        ctx.typeQualifier_list().forEach((value) => {
-            qualifiers.push(value.accept(new TypeQualifierScanner()));
-        });
-        return build_qualifier(qualifiers);
-    }
-}
-
-class TypeQualifierScanner extends CVisitor<TypeQualifierType> {
-    // @ts-ignore
-    visitTypeQualifier(ctx: TypeQualifierContext) {
-        if (ctx.Const() !== null) {
-            return TypeQualifierType.CONST;
-        } else if (ctx.Restrict() !== null) {
-            return TypeQualifierType.RESTRICT;
-        } else if (ctx.Volatile() !== null) {
-            return TypeQualifierType.VOLATILE;
-        }
-        return TypeQualifierType._ATOMIC;
     }
 }

@@ -100,23 +100,6 @@ export default class EmptyMalloc {
     }
 
     /**
-     * Determines whether a set of data is a EmptyMalloc instance
-     * @param view The data view
-     */
-    public static is_instance(view: HeapDataView): boolean {
-        if (view.byte_length < EmptyMalloc.byte_length) {
-            return false;
-        }
-        // Check if header is protected
-        const header_is_protected = view.is_protected(0, EmptyMalloc.byte_length);
-        if (!header_is_protected) {
-            return false;
-        }
-        // Ensure the tag is accurate
-        return EmptyMalloc.from_existing(view).malloc_data.tag === EmptyMalloc.tag;
-    }
-
-    /**
      * Initialises a new view for the EmptyMalloc values from an existing value
      * @param view The view for the EmptyMalloc to build from
      */

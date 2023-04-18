@@ -49,6 +49,11 @@ export default class TypeQualifier {
     public is_atomic(): boolean {
         return false;
     }
+
+    public equals(other: TypeQualifier): boolean {
+        return this.is_const() === other.is_const() && this.is_atomic() === other.is_atomic() &&
+            this.is_restrict() === other.is_restrict() && this.is_volatile() === other.is_volatile();
+    }
 }
 
 /**

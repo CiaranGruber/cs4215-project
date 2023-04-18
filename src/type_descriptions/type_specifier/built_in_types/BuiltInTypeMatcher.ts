@@ -26,8 +26,8 @@ export abstract class BuiltInTypeMatcher {
         // Add the type specifiers to the list
         type_specifiers.forEach((value) => {
             const specifier: BuiltInTypeSpecifierType = value.type_name; // Does not return valid type
-            if (specifier === null) { // Given type name is not a specifier
-                throw new InvalidTypeError("Type does not exist")
+            if (!(specifier in BuiltInTypeSpecifierType)) { // Given type name is not a specifier
+                throw new InvalidTypeError("Type does not exist");
             } else if (specifier === BuiltInTypeSpecifierType.SIGNED || specifier === BuiltInTypeSpecifierType.UNSIGNED) {
                 // Ensure the signed value has not been manually set to something else
                 if (has_been_signed && is_signed !== (specifier === BuiltInTypeSpecifierType.SIGNED)) {
@@ -42,9 +42,9 @@ export abstract class BuiltInTypeMatcher {
         });
 
         // Attempts to find which multiset the map of specifiers matches to
-        let valid_multiset: BuiltInTypeMultiset = null;
+        let valid_multiset: BuiltInTypeMultiset;
         BuiltInMultisetManager.multiset_array.forEach((value) => {
-            if (valid_multiset !== null) {
+            if (valid_multiset) {
                 return;
             }
             if (value.is_type(variation_count)) {
@@ -52,7 +52,7 @@ export abstract class BuiltInTypeMatcher {
             }
         });
         // Throw error if not found
-        if (valid_multiset === undefined) {
+        if (!valid_multiset) {
             throw new InvalidTypeError("Type does not match any valid types");
         }
         // Return the valid multiset

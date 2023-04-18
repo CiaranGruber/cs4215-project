@@ -191,7 +191,7 @@ export default class CMemory implements MemoryHandler {
         }
 
         // Change pointers to be accurate
-        if (prev_empty_data !== undefined) {
+        if (prev_empty_data) {
             prev_empty_data.next = next_pointer;
         } else {
             this.malloc_free = next_pointer;

@@ -7,26 +7,14 @@ import {
     BuiltInTypeSpecifierType
 } from "../../../../type_descriptions/type_specifier/built_in_types/BuiltInTypeSpecifierType";
 import DeclarationSpecification from "../../../../type_descriptions/DeclarationSpecification";
-import CValue from "../../../../explicit-control-evaluator/CValue";
-import Int32 from "../../../../data_views/Int32";
-import Int16 from "../../../../data_views/Int16";
+import VoidConverter from "../../../../converter/VoidConverter";
+import IntConverter from "../../../../converter/IntConverter";
+import ShortConverter from "../../../../converter/ShortConverter";
 
 function get_basic_type(built_in_specifier: BuiltInTypeSpecifierType): TypeInformation {
     const void_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(built_in_specifier));
     const declaration_specification = DeclarationSpecification.from_specifiers([void_specifier])
     return new TypeInformation(declaration_specification, []);
-}
-
-function get_void_value(): CValue {
-    return new CValue(false, get_basic_type(BuiltInTypeSpecifierType.VOID), new ArrayBuffer(0));
-}
-
-function get_int_value(value: number): CValue {
-    return new CValue(false, get_basic_type(BuiltInTypeSpecifierType.INT), Int32.create_buffer(value));
-}
-
-function get_short_value(value: number): CValue {
-    return new CValue(false, get_basic_type(BuiltInTypeSpecifierType.SHORT), Int16.create_buffer(value));
 }
 
 test('Pushing and pulling from stash', () => {
@@ -37,7 +25,7 @@ test('Pushing and pulling from stash', () => {
     const stack = memory.stack;
     // Add value to stash
     stack.enter_block([]);
-    stack.stash.push(get_void_value());
+    stack.stash.push(new VoidConverter().convert_to_c());
     // Compare peek/popped value
     const value1 = stack.stash.peek();
     expect(stack.stash.is_empty).toBeFalsy();
@@ -57,13 +45,13 @@ test('Returned value appearing on stash', () => {
     // Enter scope and return value
     stack.enter_block([]);
     stack.enter_call(get_basic_type(BuiltInTypeSpecifierType.VOID), []);
-    stack.stash.push(get_void_value());
+    stack.stash.push(new VoidConverter().convert_to_c());
     // Return empty value
     stack.exit_scope();
     expect(stack.is_empty).toBeFalsy();
     // Check value returned
     const value = stack.stash.pop();
-    expect(value).toStrictEqual(get_void_value());
+    expect(value).toStrictEqual(new VoidConverter().convert_to_c());
 });
 
 test('Default value appearing on stash on return', () => {
@@ -80,7 +68,7 @@ test('Default value appearing on stash on return', () => {
     expect(stack.is_empty).toBeFalsy();
     // Check value returned
     const value = stack.stash.pop();
-    expect(value).toStrictEqual(get_int_value(0));
+    expect(value).toStrictEqual(new IntConverter().convert_to_c(0));
 });
 
 test('Casting down return type before putting on stash', () => {
@@ -93,11 +81,11 @@ test('Casting down return type before putting on stash', () => {
     stack.enter_block([]);
     stack.enter_call(get_basic_type(BuiltInTypeSpecifierType.SHORT), []);
     // Return an int value
-    stack.stash.push(get_int_value(156709));
+    stack.stash.push(new IntConverter().convert_to_c(156709));
     stack.exit_scope();
     // Check returned value
     const return_val = stack.stash.pop();
-    const expected = get_short_value(25637);
+    const expected = new ShortConverter().convert_to_c(25637);
     expect(return_val).toStrictEqual(expected);
 });
 
@@ -111,10 +99,10 @@ test('Casting up return type before putting on stash', () => {
     stack.enter_block([]);
     stack.enter_call(get_basic_type(BuiltInTypeSpecifierType.INT), []);
     // Return a short value
-    stack.stash.push(get_short_value(25637));
+    stack.stash.push(new ShortConverter().convert_to_c(25637));
     stack.exit_scope();
     // Check value on stash
     const return_val = stack.stash.pop();
-    const expected = get_int_value(25637);
+    const expected = new IntConverter().convert_to_c(25637);
     expect(return_val).toStrictEqual(expected);
 });

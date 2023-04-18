@@ -1,7 +1,7 @@
 /**
  * BuiltInMultisetName
  *
- * Used to provide a set of descriptions for multisets
+ * Used to provide a set of descriptions for multi-sets
  * Created for CS4215 term project
  *
  * By Ciaran Gruber

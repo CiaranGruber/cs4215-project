@@ -10,7 +10,6 @@ import {
     TypeSpecifierType
 } from "../../type_descriptions/type_specifier/TypeSpecifier";
 import DeclarationSpecification from "../../type_descriptions/DeclarationSpecification";
-import CValue from "../../explicit-control-evaluator/CValue";
 import Int32 from "../../data_views/Int32";
 import Int16 from "../../data_views/Int16";
 import {build_qualifier, TypeQualifierType} from "../../type_descriptions/type_qualifier/TypeQualifier";
@@ -18,13 +17,15 @@ import {CannotSetValueError} from "../../heap/ImmutableDataView";
 import Int8 from "../../data_views/Int8";
 import BuiltInFunction from "../../functions/BuiltInFunction";
 import FunctionManager from "../../functions/FunctionManager";
-import FunctionPointer from "../../data_views/FunctionPointer";
 import BoolConverter from "../../converter/BoolConverter";
 import BuiltInMultisetManager from "../../type_descriptions/type_specifier/built_in_types/BuiltInMultisetManager";
 import {BuiltInTypeMatcher} from "../../type_descriptions/type_specifier/built_in_types/BuiltInTypeMatcher";
 import Bool from "../../data_views/Bool";
 import IntConverter from "../../converter/IntConverter";
 import QualifiedPointer from "../../type_descriptions/QualifiedPointer";
+import FunctionPointerConverter from "../../converter/FunctionPointerConverter";
+import ShortConverter from "../../converter/ShortConverter";
+import CharConverter from "../../converter/CharConverter";
 
 function get_basic_type(built_in_specifier: BuiltInTypeSpecifierType): TypeInformation {
     const type_specifier = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(built_in_specifier));
@@ -115,7 +116,7 @@ test('Calling a function', () => {
 
     // Add function
     stack.enter_block([variable_declaration]);
-    const c_value = new CValue(false, type, FunctionPointer.create_buffer(key));
+    const c_value = new FunctionPointerConverter(type).convert_to_c(key);
     stack.declare_variable(function_name, c_value);
 
     // Run function
@@ -147,7 +148,7 @@ test('Calling a function with a function pointer of a different type', () => {
 
     // Add function
     stack.enter_block([variable_declaration]);
-    const c_value = new CValue(false, type, FunctionPointer.create_buffer(key));
+    const c_value = new FunctionPointerConverter(type).convert_to_c(key);
     stack.declare_variable(function_name, c_value);
 
     // Run function
@@ -163,8 +164,7 @@ test('Casting to a smaller value', () => {
     const short_value = 9796;
     const char_value = 68;
     // Cast value
-    let value = new CValue(false, get_basic_type(BuiltInTypeSpecifierType.SHORT),
-        Int16.create_buffer(short_value));
+    let value = new ShortConverter().convert_to_c(short_value);
     value = value.cast_to(get_basic_type(BuiltInTypeSpecifierType.CHAR));
     expect(value.is_l_value).toBe(false);
     expect(new Int8(value.get_value(undefined)).value).toEqual(char_value);
@@ -174,8 +174,7 @@ test('Casting to a larger value', () => {
     const char_value = 68;
     const short_value = 68;
     // Cast value
-    let value = new CValue(false, get_basic_type(BuiltInTypeSpecifierType.CHAR),
-        Int8.create_buffer(char_value));
+    let value = new CharConverter().convert_to_c(char_value);
     value = value.cast_to(get_basic_type(BuiltInTypeSpecifierType.SHORT));
     expect(value.is_l_value).toBe(false);
     expect(new Int16(value.get_value(undefined)).value).toEqual(short_value);

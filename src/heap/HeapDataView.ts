@@ -93,20 +93,20 @@ export default class HeapDataView implements DataView {
     }
 
     /**
-     * Sets a value within the dataview with an offset of 0
+     * Sets a value within the data view with an offset of 0
      * @param value The value to set
      */
     public set_value(value: ArrayBuffer): void;
 
     /**
-     * Sets a value within the dataview relative to the given offset
+     * Sets a value within the data view relative to the given offset
      * @param offset The byte offset to start setting the value
      * @param value The value to set
      */
     public set_value(value: ArrayBuffer, offset: number): void;
 
     /**
-     * Sets a value within the dataview relative to the given offset potentially overwriting protected values
+     * Sets a value within the data view relative to the given offset potentially overwriting protected values
      * @param offset The byte offset to start setting the value
      * @param value The value to set
      * @param overwrite_protection Whether to overwrite a value even if it is protected

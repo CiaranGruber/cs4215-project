@@ -23,8 +23,8 @@ import CallFrame from "./CallFrame";
  *
  * Data Format (in order):
  * <ul style="margin-top: 0px; margin-bottom: 0px">
- *     <li>4 bytes - The current blockframe in the stack</li>
- *     <li>x × Callframe.byte_length - The blockframes within the stack</li>
+ *     <li>4 bytes - The current block frame in the stack</li>
+ *     <li>x × (CallFrame/BlockFrame).byte_length - The frames within the stack</li>
  * </ul>
  */
 export default class Stack implements MemoryHandler {
@@ -39,12 +39,12 @@ export default class Stack implements MemoryHandler {
     }
 
     /**
-     * Gets the stash from the current blockframe
+     * Gets the stash from the current frame
      */
     public get stash(): Stash {
         const frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
         if (frame === undefined) {
-            throw new NothingOnStackError("No blockframes are currently on the stack (Therefore no stash)");
+            throw new NothingOnStackError("No frames are currently on the stack (Therefore there is no stash)");
         }
         return frame.stash;
     }
@@ -100,9 +100,9 @@ export default class Stack implements MemoryHandler {
         let curr_offset = this.curr_frame_offset;
         // Search for variable starting at the top frame
         while (curr_offset !== -1) {
-            const is_callframe = FrameHeader.is_callframe(this.data.subset(curr_offset, FrameHeader.byte_length));
+            const is_call_frame = FrameHeader.is_call_frame(this.data.subset(curr_offset, FrameHeader.byte_length));
             let frame: CallFrame | BlockFrame;
-            if (is_callframe) {
+            if (is_call_frame) {
                 const frame_size = CallFrame.byte_length(this.data.subset(curr_offset, CallFrame.fixed_byte_length));
                 frame = CallFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
             } else {
@@ -110,11 +110,11 @@ export default class Stack implements MemoryHandler {
                 frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
             }
             const variable = frame.environment.get_variable(name);
-            if (variable !== undefined) {
+            if (variable) {
                 return variable;
             }
             // If it is a function call, get the variable from the global environment
-            curr_offset = is_callframe ? Stack.fixed_byte_length : frame.prev_frame_offset;
+            curr_offset = is_call_frame ? Stack.fixed_byte_length : frame.prev_frame_offset;
         }
         throw new VariableNotFoundError(`The variable ${name} was not found in any frames`);
     }
@@ -124,12 +124,12 @@ export default class Stack implements MemoryHandler {
             return undefined;
         }
 
-        return FrameHeader.is_callframe(this.data.subset(this.curr_frame_offset, FrameHeader.byte_length));
+        return FrameHeader.is_call_frame(this.data.subset(this.curr_frame_offset, FrameHeader.byte_length));
     }
 
     /**
-     * Gets the top-most blockframe from the stack
-     * @returns The top-most blockframe, else undefined
+     * Gets the top-most block frame from the stack
+     * @returns The top-most block frame, else undefined
      */
     private get block_frame(): BlockFrame {
         if (this.is_empty) {
@@ -210,7 +210,7 @@ export default class Stack implements MemoryHandler {
         // Get the current frame
         const is_call_frame = this.top_is_call_frame;
         if (is_call_frame === undefined) {
-            throw new NothingOnStackError("Cannot exit scope when there is not blockframe currently present");
+            throw new NothingOnStackError("Cannot exit scope when there is not block frame currently present");
         }
         const frame = is_call_frame ? this.call_frame : this.block_frame;
         // Get return value to push onto stash if possible
@@ -234,7 +234,7 @@ export default class Stack implements MemoryHandler {
         // Push onto stash of previous frame
         if (is_call_frame) {
             const top_frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
-            if (top_frame !== undefined) {
+            if (top_frame) {
                 top_frame.stash.push(return_value);
             }
         }

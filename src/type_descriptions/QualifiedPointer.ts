@@ -25,4 +25,12 @@ export default class QualifiedPointer {
     public constructor(type_qualifier: TypeQualifier) {
         this.type_qualifier = type_qualifier;
     }
+
+    /**
+     * Determines Whether the given pointer equals another pointer
+     * @param other The other pointer to compare
+     */
+    public equals(other: QualifiedPointer): boolean {
+        return this.type_qualifier.equals(other.type_qualifier);
+    }
 }
