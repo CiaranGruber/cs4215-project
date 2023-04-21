@@ -1,8 +1,8 @@
 import {TypeNameContext} from "../../../parser/antlr_gen/CParser";
 import CVisitor from "../../../parser/antlr_gen/CVisitor";
 import TypeInformation from "../../../type_descriptions/TypeInformation";
-import {scan_spec_qual_list} from "./SpecifierQualifierScanner";
-import {scan_abstract_declaration} from "./AbstractDeclaratorScanner";
+import scan_spec_qual_list from "./SpecifierQualifierScanner";
+import scan_abstract_declaration from "../declaration_scanners/AbstractDeclaratorScanner";
 
 /**
  * Scans a type name to retrieve the associated type

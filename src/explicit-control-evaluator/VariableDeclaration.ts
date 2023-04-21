@@ -23,10 +23,10 @@ export default class VariableDeclaration {
 
     /**
      * Creates a new variable declaration with the given type information and name
-     * @param type_information The type of the variable
      * @param name The name of the variable
+     * @param type_information The type of the variable
      */
-    public constructor(type_information: TypeInformation, name: string) {
+    public constructor(name: string, type_information: TypeInformation) {
         this.type_information = type_information;
         this.name = name;
     }

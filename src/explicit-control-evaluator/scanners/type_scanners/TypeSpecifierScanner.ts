@@ -9,7 +9,7 @@ import {
     BuiltInTypeSpecifierType
 } from "../../../type_descriptions/type_specifier/built_in_types/BuiltInTypeSpecifierType";
 import {UnknownDefinitionError} from "../../ExplicitControlListener";
-import {scan_type_qualifier} from "./TypeQualifierScanner";
+import scan_type_qualifier from "./TypeQualifierScanner";
 
 /**
  * Scans for a given declaration specifier

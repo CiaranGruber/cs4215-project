@@ -1,5 +1,5 @@
-import {DeclaratorContext, DirectDeclaratorContext} from "../../parser/antlr_gen/CParser";
-import CVisitor from "../../parser/antlr_gen/CVisitor";
+import {DeclaratorContext, DirectDeclaratorContext} from "../../../parser/antlr_gen/CParser";
+import CVisitor from "../../../parser/antlr_gen/CVisitor";
 
 export default function scan_for_name(ctx: DeclaratorContext): string {
     return ctx.accept(new DeclaratorVisitor());

@@ -58,13 +58,12 @@ test('Referencing and dereferencing a value', () => {
     const int_type_spec = new TypeSpecDeclarationSpecifier(new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.INT));
     const declaration_specifier = DeclarationSpecification.from_specifiers([int_type_spec]);
     const pointer = new QualifiedPointer(build_qualifier([]));
-    const variable = new VariableDeclaration(new TypeInformation(declaration_specifier, []), variable_name);
-    const variable_ref = new VariableDeclaration(new TypeInformation(declaration_specifier, [pointer]),
-        variable_ref_name);
+    const variable = new VariableDeclaration(variable_name, new TypeInformation(declaration_specifier, []));
+    const variable_ref = new VariableDeclaration(variable_ref_name, new TypeInformation(declaration_specifier, [pointer]));
     stack.enter_block([variable, variable_ref]);
     // Declare and assign variables
-    stack.declare_variable(variable_name);
-    stack.declare_variable(variable_ref_name);
+    stack.declare_variable(variable_name, memory);
+    stack.declare_variable(variable_ref_name, memory);
     stack.get_variable(variable_name).set_value(memory, Int32.create_buffer(variable_value));
     const reference = stack.get_variable(variable_name).ref();
     stack.get_variable(variable_ref_name).set_value(memory, reference.get_value(memory).referenced_buffer);
@@ -91,9 +90,9 @@ test('Setting the value of a constant', () => {
     const type = new TypeInformation(declaration_specification, []);
 
     // Set up variable to get reference for
-    const declaration = new VariableDeclaration(type, variable_name);
+    const declaration = new VariableDeclaration(variable_name, type);
     stack.enter_block([declaration]);
-    stack.declare_variable(variable_name);
+    stack.declare_variable(variable_name, memory);
     const variable = stack.get_variable(variable_name);
     expect(() => variable.set_value(memory, Int32.create_buffer(0))).toThrow(CannotSetValueError);
 });
@@ -105,23 +104,33 @@ test('Calling a function', () => {
     GlobalContext.initialise_instance(true);
     const function_manager = new FunctionManager();
     const memory = new CMemory(memory_size);
-    const stack = memory.stack;
+    let stack = memory.stack;
 
     // Set up function
     const bool_type = get_basic_type(BuiltInTypeSpecifierType._BOOL);
     const type = new TypeInformation(DeclarationSpecification.function_specifier(bool_type), []);
-    const variable_declaration = new VariableDeclaration(type, function_name);
+    const variable_declaration = new VariableDeclaration(function_name, type);
     const func = new BuiltInFunction(() => {return true;}, new BoolConverter(), []);
     const key = function_manager.add_function(func);
 
     // Add function
     stack.enter_block([variable_declaration]);
     const c_value = new FunctionPointerConverter(type).convert_to_c(key);
-    stack.declare_variable(function_name, c_value);
+    stack.declare_variable(function_name, memory, c_value);
 
     // Run function
     const value = stack.get_variable(function_name);
-    const return_val = value.call([], memory, function_manager);
+    let return_func: (memory) => void;
+    const return_cast = (cast_type) => {
+        return_func = (memory) => {
+            const value = memory.stack.stash.pop().cast_to(cast_type);
+            memory.stack.stash.push(value);
+        };
+    };
+    value.call([], memory, function_manager, return_cast);
+    return_func(memory);
+    stack = memory.stack;
+    const return_val = stack.stash.pop();
     // Check type
     expect(is_type(BuiltInTypeSpecifierType._BOOL, return_val.type_information)).toBeTruthy();
     // Check return value
@@ -137,23 +146,33 @@ test('Calling a function with a function pointer of a different type', () => {
     GlobalContext.initialise_instance(true);
     const function_manager = new FunctionManager();
     const memory = new CMemory(memory_size);
-    const stack = memory.stack;
+    let stack = memory.stack;
 
     // Set up function
     const char_type = get_basic_type(BuiltInTypeSpecifierType.CHAR);
     const type = new TypeInformation(DeclarationSpecification.function_specifier(char_type), []);
-    const variable_declaration = new VariableDeclaration(type, function_name);
+    const variable_declaration = new VariableDeclaration(function_name, type);
     const func = new BuiltInFunction(() => {return short_val;}, new IntConverter(), []);
     const key = function_manager.add_function(func);
 
     // Add function
     stack.enter_block([variable_declaration]);
     const c_value = new FunctionPointerConverter(type).convert_to_c(key);
-    stack.declare_variable(function_name, c_value);
+    stack.declare_variable(function_name, memory, c_value);
 
     // Run function
     const value = stack.get_variable(function_name);
-    const return_val = value.call([], memory, function_manager);
+    let return_func: (memory) => void;
+    const return_cast = (cast_type) => {
+        return_func = (memory) => {
+            const value = memory.stack.stash.pop().cast_to(cast_type);
+            memory.stack.stash.push(value);
+        };
+    };
+    value.call([], memory, function_manager, return_cast);
+    return_func(memory);
+    stack = memory.stack; // Reassign stack as it has been manipulated by another function
+    const return_val = stack.stash.pop();
     // Check type
     expect(is_type(BuiltInTypeSpecifierType.CHAR, return_val.type_information)).toBeTruthy();
     // Check return value
@@ -165,7 +184,7 @@ test('Casting to a smaller value', () => {
     const char_value = 68;
     // Cast value
     let value = new ShortConverter().convert_to_c(short_value);
-    value = value.cast_to(get_basic_type(BuiltInTypeSpecifierType.CHAR));
+    value = value.cast_to(undefined, get_basic_type(BuiltInTypeSpecifierType.CHAR));
     expect(value.is_l_value).toBe(false);
     expect(new Int8(value.get_value(undefined)).value).toEqual(char_value);
 });
@@ -175,7 +194,7 @@ test('Casting to a larger value', () => {
     const short_value = 68;
     // Cast value
     let value = new CharConverter().convert_to_c(char_value);
-    value = value.cast_to(get_basic_type(BuiltInTypeSpecifierType.SHORT));
+    value = value.cast_to(undefined, get_basic_type(BuiltInTypeSpecifierType.SHORT));
     expect(value.is_l_value).toBe(false);
     expect(new Int16(value.get_value(undefined)).value).toEqual(short_value);
 });

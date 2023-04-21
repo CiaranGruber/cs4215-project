@@ -30,6 +30,6 @@ export default class PointerConverter extends Converter<number> {
     }
 
     convert_to_js(value: CValue): number {
-        return new Pointer(value.cast_to(this.type).get_value(undefined)).value;
+        return new Pointer(value.cast_to(undefined, this.type).get_value(undefined)).value;
     }
 }

@@ -90,4 +90,24 @@ export default class DeclarationSpecification {
         }
         return this.specifier.equals(other.specifier);
     }
+
+    /**
+     * Gets the default declaration specification type
+     */
+    public static default(): DeclarationSpecification {
+        return DeclarationSpecification.from_existing_specs(TypeValidator.default_type(), build_qualifier([]));
+    }
+
+    /**
+     * Converts the given declaration specification to a string
+     */
+    public to_string(): string {
+        let string = "";
+        string += this.qualifier.to_string();
+        if (string !== "") { // Add spacer between qualifier and specifier
+            string += " ";
+        }
+        string += this.specifier.to_string();
+        return string;
+    }
 }

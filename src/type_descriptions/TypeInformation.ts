@@ -13,7 +13,7 @@ import GlobalContext from "../global_context/GlobalContext";
 import PointerCaster from "./type_casting/PointerCaster";
 import ImmutableDataView from "../heap/ImmutableDataView";
 import {build_qualifier} from "./type_qualifier/TypeQualifier";
-import {TypeSpecifierType} from "./type_specifier/TypeSpecifier";
+import {FunctionTypeSpecifier, TypeSpecifierType} from "./type_specifier/TypeSpecifier";
 import {SpecifierDescription} from "./type_specifier/SpecifierDescription";
 
 /**
@@ -148,9 +148,22 @@ export default class TypeInformation {
         return this.declaration_specifier.specifier.is_described_as(descriptor);
     }
 
-    public to_string() {
-        // Todo: Improve type information
-        return "type";
+    /**
+     * Gets a string representing the given type
+     */
+    public to_string(): string {
+        let string = "";
+        if (this.declaration_specifier.specifier.type === TypeSpecifierType.FUNCTION && this._pointers.length > 0) {
+            string += "() => "
+            const function_specifier = this.declaration_specifier.specifier as FunctionTypeSpecifier;
+            string += function_specifier.return_type.to_string();
+        } else {
+            string += this.declaration_specifier.to_string();
+            this._pointers.forEach((value) => {
+                string += value.to_string();
+            });
+        }
+        return string;
     }
 }
 

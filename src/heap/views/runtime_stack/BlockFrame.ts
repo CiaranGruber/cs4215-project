@@ -96,6 +96,26 @@ export default class BlockFrame implements MemoryHandler {
     }
 
     /**
+     * Gets a string representing the information about the call frame
+     */
+    public pretty_string(): string {
+        let string = "";
+        const divider = "---------------------\n";
+        string += "Type: Block Frame\n";
+        string += `Previous Frame Offset: ${this.prev_frame_offset}\n`;
+        string += `Frame Offset: ${this.byte_offset}\n`;
+        string += `Frame Size: ${this.byte_length}\n`;
+        string += divider;
+        string += "Environment\n";
+        string += this.environment.pretty_string();
+        string += "\n"
+        string += divider;
+        string += "Stash\n";
+        string += this.stash.pretty_string();
+        return string;
+    }
+
+    /**
      * Allocates a block frame in the given heap view
      * @param view The view used to change the heap values
      * @param prev_frame_addr The address to the previous frame

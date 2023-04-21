@@ -5,6 +5,10 @@ import {UnknownDefinitionError} from "../../ExplicitControlListener";
 import DeclarationSpecification from "../../../type_descriptions/DeclarationSpecification";
 import scan_for_declaration_specifier from "./TypeSpecifierScanner";
 
+/**
+ * Scans a declaration specifier list to
+ * @param ctx
+ */
 export default function scan_declaration_specification(ctx: DeclarationSpecifiersContext) {
     return ctx.accept(new DeclarationSpecificationScanner());
 }
@@ -18,7 +22,7 @@ class DeclarationSpecificationScanner extends CVisitor<DeclarationSpecification>
     visitDeclarationSpecifiers(ctx: DeclarationSpecifiersContext) {
         if (ctx.declarationSpecifier_list()) { // Standard declaration list
             // Get declaration specifier information
-            let specifiers = new Array<DeclarationSpecifier>();
+            let specifiers: Array<DeclarationSpecifier> = [];
             ctx.declarationSpecifier_list().forEach((value) => {
                 const declaration_specifier_visitor = new DeclarationSpecifierVisitor();
                 specifiers.push(value.accept(declaration_specifier_visitor));

@@ -14,6 +14,8 @@ import VariableMem from "./VariableMem";
 import CMemoryTag, {CMemoryTagValue} from "../base/CMemoryTag";
 import {VariableNotFoundError} from "./Stack";
 import CValue from "../../../explicit-control-evaluator/CValue";
+import BitArray from "../../BitArray";
+import CMemory from "../../CMemory";
 
 /**
  * Represents an environment containing information about variables
@@ -84,17 +86,19 @@ export default class Environment {
     /**
      * Declares the given variable in the environment without setting a value
      * @param name The name of the variable to declare
+     * @param memory The memory used for C
      */
-    public declare_variable(name: string);
+    public declare_variable(name: string, memory: CMemory);
 
     /**
      * Declares the given variable in the environment and sets its value
      * @param name The name of the variable to declare
+     * @param memory The memory used for C
      * @param value The value to set during the declaration
      */
-    public declare_variable(name: string, value: CValue);
+    public declare_variable(name: string, memory: CMemory, value: CValue);
 
-    public declare_variable(name: string, value?: CValue): void {
+    public declare_variable(name: string, memory: CMemory, value?: CValue): void {
         if (this.is_empty()) {
             throw new VariableNotFoundError(`The variable ${name} is not present in the current environment`);
         }
@@ -117,7 +121,7 @@ export default class Environment {
                 // Set value if relevant
                 if (value) {
                     const heap_view = variable.data_view;
-                    heap_view.set_value(value.cast_to(variable.type_info).data);
+                    heap_view.set_value(value.cast_to(memory, variable.type_info).data);
                 }
                 return;
             }
@@ -174,6 +178,75 @@ export default class Environment {
      */
     public static from_existing(view: HeapDataView): Environment {
         return new Environment(view);
+    }
+
+    /**
+     * Gets a string representing the information about the environment
+     */
+    public pretty_string(): string {
+        if (this.is_empty()) {
+            return "No variables present"
+        }
+        const names: Array<string> = [];
+        const declared: Array<string> = [];
+        const types: Array<string> = [];
+        const offsets: Array<string> = [];
+        const lengths: Array<string> = [];
+        const data: Array<string> = [];
+        // Get variable information
+        let offset = Environment.variable_offset;
+        let variable_count = 0;
+        while (offset < this.data.byte_length) {
+            variable_count++;
+            const variable_header_view = this.data.subset(offset, VariableMem.fixed_byte_length);
+            const variable_size = VariableMem.get_size(variable_header_view);
+            const variable_view = this.data.subset(offset, variable_size);
+            // Get the complete variable view
+            const variable = VariableMem.from_existing(variable_view);
+            names.push(variable.name);
+            types.push(variable.type_info.to_string());
+            declared.push(variable.is_declared ? "True" : "False");
+            offsets.push((this.data.byte_offset + offset).toString());
+            lengths.push(variable_size.toString());
+            const data_bits = new BitArray(variable.data_view).to_string();
+            data.push(data_bits);
+            offset += variable_size;
+        }
+        const headings = ["Name", "Type", "Offset", "Length", "Declared", "Data"]
+        const heading_sizes = [];
+        headings.forEach((header) => heading_sizes.push(header.length + 2));
+        // Get maximum sizes
+        for (let i = 0; i < variable_count; i++) {
+            const columns = [names[i], types[i], offsets[i], lengths[i], declared[i], data[i]];
+            columns.forEach((value, index) => heading_sizes[index] = Math.max(heading_sizes[index], value.length + 2));
+        }
+        // Print environment details
+        let string = "";
+        string += `Offset: ${this.data.byte_offset}\n`
+        string += `Length: ${this.data.byte_length}\n`
+        // Print header
+        string += "|";
+        headings.forEach((header, index) => {
+            const pad_left = Math.floor((heading_sizes[index] - header.length) / 2);
+            string += " ".repeat(pad_left);
+            string += header;
+            string += " ".repeat(heading_sizes[index] - pad_left - header.length);
+            string += "|"
+        });
+        string += "\n|"
+        headings.forEach((header, index) => string += "-".repeat(heading_sizes[index]) + "|");
+        // Print variables
+        for (let i = 0; i < variable_count; i++) {
+            string += "\n|";
+            const columns = [names[i], types[i], offsets[i], lengths[i], declared[i], data[i]];
+            columns.forEach((value, index) => {
+                string += " ";
+                string += value;
+                string += " ".repeat(heading_sizes[index] - value.length - 1);
+                string += "|"
+            });
+        }
+        return string;
     }
 }
 

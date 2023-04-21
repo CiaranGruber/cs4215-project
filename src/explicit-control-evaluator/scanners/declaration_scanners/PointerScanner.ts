@@ -5,13 +5,13 @@ import TypeQualifier, {
     build_qualifier,
     TypeQualifierType
 } from "../../../type_descriptions/type_qualifier/TypeQualifier";
-import {scan_type_qualifier} from "./TypeQualifierScanner";
+import scan_type_qualifier from "../type_scanners/TypeQualifierScanner";
 
 /**
  * Scans the pointer context to collect into a list of qualified pointers
  * @param ctx The pointer context to search from
  */
-export function scan_pointers(ctx: PointerContext): Array<QualifiedPointer> {
+export default function scan_pointers(ctx: PointerContext): Array<QualifiedPointer> {
     return ctx.accept(new PointerScanner());
 }
 

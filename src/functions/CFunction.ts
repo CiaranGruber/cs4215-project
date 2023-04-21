@@ -18,7 +18,7 @@ export default abstract class CFunction {
      * @param memory The C Memory which the function may modify
      * @param args The arguments for the function
      */
-    public abstract run(memory: CMemory, args: Array<CValue>): CValue;
+    public abstract run(memory: CMemory, args: Array<CValue>);
 }
 
 /**

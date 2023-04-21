@@ -29,7 +29,7 @@ export default class HeapDataView implements DataView {
     public readonly byte_length: number;
 
     public get buffer() {
-        return this.heap.get_value(this.byte_offset, this.byte_length).referenced_buffer;
+        return this.heap.get_value(this.byte_offset, this.byte_length).buffer;
     }
 
     public get byteLength() {

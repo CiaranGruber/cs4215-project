@@ -8,7 +8,7 @@ import scan_for_declaration_specifier from "./TypeSpecifierScanner";
  * Scans for a specifier/qualifier combination
  * @param ctx
  */
-export function scan_spec_qual_list(ctx: SpecifierQualifierListContext): DeclarationSpecification {
+export default function scan_spec_qual_list(ctx: SpecifierQualifierListContext): DeclarationSpecification {
     const specifiers = ctx.accept(new SpecifierQualifierScanner());
     return DeclarationSpecification.from_specifiers(specifiers);
 }

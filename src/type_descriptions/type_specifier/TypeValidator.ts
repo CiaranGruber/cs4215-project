@@ -27,10 +27,7 @@ export default abstract class TypeValidator {
     public static get_type(specifiers: Array<TypeSpecifier>): TypeSpecifier {
         // Case for when there is no specifiers (default to 'int')
         if (specifiers.length === 0) {
-            const multiset = BuiltInTypeMatcher.get_type_multiset([
-                new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.INT)
-            ]);
-            return new BuiltInTypeSpecifier(multiset);
+            return this.default_type();
         }
 
         // Case for only a single specifier shown
@@ -51,5 +48,15 @@ export default abstract class TypeValidator {
 
         // Return the appropriate multiset
         return new BuiltInTypeSpecifier(BuiltInTypeMatcher.get_type_multiset(specifiers as Array<BuiltInTypeSpecifierEnum>));
+    }
+
+    /**
+     * Gets the default type in the case where there is not specifiers
+     */
+    public static default_type() {
+        const multiset = BuiltInTypeMatcher.get_type_multiset([
+            new BuiltInTypeSpecifierEnum(BuiltInTypeSpecifierType.INT)
+        ]);
+        return new BuiltInTypeSpecifier(multiset);
     }
 }

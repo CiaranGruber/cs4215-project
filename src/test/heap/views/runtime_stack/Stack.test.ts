@@ -21,7 +21,7 @@ test('Initialising the initial stack', () => {
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
     stack.enter_block([]);
-    stack.exit_scope();
+    stack.exit_scope(memory);
     expect(memory.middle_memory_free).toBe(memory_size - Stack.fixed_byte_length);
 });
 
@@ -33,8 +33,8 @@ test('Initialising multiple frames', () => {
     stack.enter_block([]);
     stack.enter_call(get_base_return(), []);
     stack.enter_block([]);
-    stack.exit_scope();
-    stack.exit_scope();
-    stack.exit_scope();
+    stack.exit_scope(memory);
+    stack.exit_scope(memory);
+    stack.exit_scope(memory);
     expect(memory.middle_memory_free).toBe(memory_size - Stack.fixed_byte_length);
 });

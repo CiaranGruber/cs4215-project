@@ -23,6 +23,6 @@ export default class LongConverter extends Converter<bigint> {
     }
 
     convert_to_js(value: CValue): bigint {
-        return new BigInt64(value.cast_to(LongConverter.type).get_value(undefined)).value;
+        return new BigInt64(value.cast_to(undefined, LongConverter.type).get_value(undefined)).value;
     }
 }

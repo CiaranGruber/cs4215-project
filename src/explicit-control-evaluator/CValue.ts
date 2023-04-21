@@ -37,20 +37,24 @@ export default class CValue {
     }
 
     /**
-     * Calls the given value as if it is a function
+     * Calls the given value as if it is a function and will also cast the value
      * @param args The arguments to the function
      * @param memory The memory associated with the C
      * @param function_manager The function manager used to get the relevant function
+     * @param cast_instr A function used to create a cast instruction with the type being the specified type
      */
-    public call(args: Array<CValue>, memory: CMemory, function_manager: FunctionManager): CValue {
+    public call(args: Array<CValue>, memory: CMemory, function_manager: FunctionManager,
+                cast_instr: (cast_type: TypeInformation) => void) {
         const specifier = this.type_information.declaration_specifier.specifier;
         if (specifier.type === TypeSpecifierType.FUNCTION && this.type_information.pointers.length < 2) {
             const function_specifier = specifier as FunctionTypeSpecifier;
+            cast_instr(function_specifier.return_type); // Instruction pushed first so it is run last
             if (this.type_information.pointers.length === 0) {
-                return function_specifier.call_function(this.get_value(memory), args, memory, function_manager);
+                function_specifier.call_function(this.get_value(memory), args, memory, function_manager);
+            } else {
+                // Run even if it is a pointer to a function
+                function_specifier.call_function(this.deref(memory).get_value(memory), args, memory, function_manager);
             }
-            // Run even if it is a pointer to a function
-            return function_specifier.call_function(this.deref(memory).get_value(memory), args, memory, function_manager);
         } else {
             throw new InvalidTypeError("Cannot call a non-function value")
         }
@@ -139,10 +143,11 @@ export default class CValue {
 
     /**
      * Attempts to cast to the given type if possible
+     * @param memory The memory used if the value is an lValue
      * @param type The type to cast to
      */
-    public cast_to(type: TypeInformation): CValue {
-        const cast_data = type.cast_data(this.type_information, new ImmutableDataView(this._data));
+    public cast_to(memory: CMemory, type: TypeInformation): CValue {
+        const cast_data = type.cast_data(this.type_information, this.get_value(memory));
         // Value is no longer an l_value
         return new CValue(false, type, cast_data);
     }

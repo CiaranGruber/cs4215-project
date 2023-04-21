@@ -23,6 +23,6 @@ export default class ShortConverter extends Converter<number> {
     }
 
     convert_to_js(value: CValue): number {
-        return new Int16(value.cast_to(ShortConverter.type).get_value(undefined)).value;
+        return new Int16(value.cast_to(undefined, ShortConverter.type).get_value(undefined)).value;
     }
 }

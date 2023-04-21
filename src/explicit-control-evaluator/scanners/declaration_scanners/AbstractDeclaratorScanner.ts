@@ -3,7 +3,7 @@ import CVisitor from "../../../parser/antlr_gen/CVisitor";
 import TypeInformation from "../../../type_descriptions/TypeInformation";
 import DeclarationSpecification from "../../../type_descriptions/DeclarationSpecification";
 import QualifiedPointer from "../../../type_descriptions/QualifiedPointer";
-import {scan_pointers} from "./PointerScanner";
+import scan_pointers from "./PointerScanner";
 import {UnknownDefinitionError} from "../../ExplicitControlListener";
 
 /**
@@ -11,7 +11,7 @@ import {UnknownDefinitionError} from "../../ExplicitControlListener";
  * @param ctx The abstract declarator context
  * @param specification The declaration specification of the type to determine
  */
-export function scan_abstract_declaration(ctx: AbstractDeclaratorContext, specification: DeclarationSpecification) {
+export default function scan_abstract_declaration(ctx: AbstractDeclaratorContext, specification: DeclarationSpecification) {
     return ctx.accept(new AbstractDeclaratorScanner(specification));
 }
 

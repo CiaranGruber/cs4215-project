@@ -13,6 +13,7 @@ import {SegmentationFaultError} from "../../RestrictedHeap";
 import StashValue from "./StashValue";
 import CValue from "../../../explicit-control-evaluator/CValue";
 import Int32 from "../../../data_views/Int32";
+import BitArray from "../../BitArray";
 
 /**
  * Represents a view of the C stack memory
@@ -148,6 +149,77 @@ export default class Stash {
         const stash_value = StashValue.from_existing(value_view);
         // Peek value from stash
         return stash_value.value;
+    }
+
+    /**
+     * Gets a string representing the information about the environment
+     */
+    public pretty_string(): string {
+        if (this.curr_value_offset === -1) {
+            return "No values present"
+        }
+        const previous_offset: Array<string> = [];
+        const types: Array<string> = [];
+        const offsets: Array<string> = [];
+        const value_type: Array<string> = [];
+        const lengths: Array<string> = [];
+        const data: Array<string> = [];
+        // Get variable information
+        let value_count = 0;
+        let offset = this.curr_value_offset;
+        while (offset !== -1) {
+            value_count++;
+            const value_header_view = this.data.subset(offset, StashValue.fixed_byte_length);
+            const value_size = StashValue.get_size(value_header_view);
+            const value_view = this.data.subset(offset, value_size);
+            // Get the complete stash value
+            const stash_value = StashValue.from_existing(value_view);
+            const c_value = stash_value.value;
+            const value_offset = stash_value.prev_offset === -1 ? -1 : this.data.byte_offset + stash_value.prev_offset;
+            previous_offset.push(value_offset.toString());
+            types.push(stash_value.type_info.to_string());
+            offsets.push((this.data.byte_offset + offset).toString());
+            lengths.push(value_size.toString());
+            value_type.push(c_value.is_l_value ? "lValue" : "prValue");
+            const data_bits = new BitArray(c_value.data).to_string();
+            data.push(data_bits);
+            offset = stash_value.prev_offset;
+        }
+        const headings = ["Type", "Offset", "Length", "Prev. value offset", "Value Type", "Data"]
+        const heading_sizes = [];
+        headings.forEach((header) => heading_sizes.push(header.length + 2));
+        // Get maximum sizes
+        for (let i = 0; i < value_count; i++) {
+            const columns = [types[i], offsets[i], lengths[i], previous_offset[i], value_type[i], data[i]];
+            columns.forEach((value, index) => heading_sizes[index] = Math.max(heading_sizes[index], value.length + 2));
+        }
+        // Print stash details
+        let string = "";
+        string += `Offset: ${this.data.byte_offset}\n`
+        string += `Length: ${this.data.byte_length}\n`
+        // Print header
+        string += "|";
+        headings.forEach((header, index) => {
+            const pad_left = Math.floor((heading_sizes[index] - header.length) / 2);
+            string += " ".repeat(pad_left);
+            string += header;
+            string += " ".repeat(heading_sizes[index] - pad_left - header.length);
+            string += "|"
+        });
+        string += "\n|"
+        headings.forEach((header, index) => string += "-".repeat(heading_sizes[index]) + "|");
+        // Print variables
+        for (let i = 0; i < value_count; i++) {
+            string += "\n|";
+            const columns = [types[i], offsets[i], lengths[i], previous_offset[i], value_type[i], data[i]];
+            columns.forEach((value, index) => {
+                string += " ";
+                string += value;
+                string += " ".repeat(heading_sizes[index] - value.length - 1);
+                string += "|"
+            });
+        }
+        return string;
     }
 }
 

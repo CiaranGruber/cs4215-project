@@ -6,7 +6,7 @@ import IntegerCaster from "../../../../type_descriptions/type_casting/IntegerCas
 
 test('Testing if value is in multiset', () => {
     // Create multiset
-    const multiset = new BuiltInTypeMultiset(4, new IntegerCaster(4));
+    const multiset = new BuiltInTypeMultiset(undefined, 4, new IntegerCaster(4));
     multiset.add_variation_set(new Map([[BuiltInTypeSpecifierType.SIGNED, 1]]));
     multiset.add_variation_set(new Map([[BuiltInTypeSpecifierType.INT, 2]]));
     // Get test values

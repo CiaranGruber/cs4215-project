@@ -34,13 +34,16 @@ export default class BuiltInFunction extends CFunction {
         this.args_converters = args_converter;
     }
 
-    public run(memory: CMemory, args: Array<CValue>): CValue {
+    public run(memory: CMemory, args: Array<CValue>) {
         if (args.length !== this.args_converters.length) {
             throw new InvalidArgumentCountError("Not enough arguments passed into the function");
         }
+        // Convert arguments to Javascript values
         const converted_args = args.map((value, index) =>
             this.args_converters[index].convert_to_js(value.get_c_value(memory)));
+        // Run built-in
         const return_val = this.built_in(converted_args);
-        return this.return_converter.convert_to_c(return_val);
+        // Push value to the stash
+        memory.stack.stash.push(this.return_converter.convert_to_c(return_val));
     }
 }

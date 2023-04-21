@@ -26,7 +26,7 @@ export function basic_padding_cast(dest_size: number, data: DataView): ArrayBuff
     const new_buffer = new ArrayBuffer(dest_size);
     const start_offset = new_buffer.byteLength - data.byteLength;
     // Copy to new buffer
-    new Uint8Array(new_buffer, start_offset).set(new Uint8Array(data.buffer, data.byteOffset));
+    new Uint8Array(new_buffer, start_offset).set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
     return new_buffer;
 }
 

@@ -15,6 +15,7 @@ import GenericTypeCaster from "../../type_casting/GenericTypeCaster";
  * A multiset used to match types to a number of acceptable variations
  */
 export default class BuiltInTypeMultiset {
+    private string_representation: string;
     private variations: Array<Map<BuiltInTypeSpecifierType, number>>;
     private descriptors: Set<SpecifierDescription>;
     public readonly caster: GenericTypeCaster;
@@ -22,10 +23,12 @@ export default class BuiltInTypeMultiset {
 
     /**
      * Constructs a new type multiset
+     * @param string_rep The string representation of the multi-set
      * @param type_size The size of the type
      * @param caster The type caster to use to cast objects to this type
      */
-    constructor(type_size: number, caster: GenericTypeCaster) {
+    constructor(string_rep: string, type_size: number, caster: GenericTypeCaster) {
+        this.string_representation = string_rep;
         this.descriptors = new Set<SpecifierDescription>();
         this.variations = [];
         this.type_size = type_size;
@@ -95,6 +98,13 @@ export default class BuiltInTypeMultiset {
         });
 
         return found_val;
+    }
+
+    /**
+     * Converts the given type multi-set to a string representation
+     */
+    public to_string(): string {
+        return this.string_representation;
     }
 }
 

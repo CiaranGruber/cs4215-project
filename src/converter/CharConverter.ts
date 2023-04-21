@@ -23,6 +23,6 @@ export default class CharConverter extends Converter<number> {
     }
 
     convert_to_js(value: CValue): number {
-        return new Int8(value.cast_to(CharConverter.type).get_value(undefined)).value;
+        return new Int8(value.cast_to(undefined, CharConverter.type).get_value(undefined)).value;
     }
 }

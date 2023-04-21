@@ -29,10 +29,6 @@
 /** C 2011 grammar built from the C11 Spec */
 grammar C;
 
-compilationUnit
-    :   translationUnit? EOF
-    ;
-
 primaryExpression
     :   Identifier
     |   constant
@@ -167,10 +163,6 @@ declaration
     ;
 
 declarationSpecifiers
-    :   declarationSpecifier+
-    ;
-
-declarationSpecifiers2
     :   declarationSpecifier+
     ;
 
@@ -366,7 +358,7 @@ parameterList
 
 parameterDeclaration
     :   declarationSpecifiers declarator
-    |   declarationSpecifiers2 abstractDeclarator?
+    |   declarationSpecifiers abstractDeclarator?
     ;
 
 identifierList
@@ -427,7 +419,7 @@ staticAssertDeclaration
     ;
 
 statement
-    :   labeledStatement
+    :   labelledStatement
     |   compoundStatement
     |   expressionStatement
     |   selectionStatement
@@ -436,7 +428,7 @@ statement
     |   ('__asm' | '__asm__') ('volatile' | '__volatile__') '(' (logicalOrExpression (',' logicalOrExpression)*)? (':' (logicalOrExpression (',' logicalOrExpression)*)?)* ')' ';'
     ;
 
-labeledStatement
+labelledStatement
     :   Identifier ':' statement
     |   'case' constantExpression ':' statement
     |   'default' ':' statement
@@ -478,7 +470,7 @@ forCondition
 	;
 
 forDeclaration
-    :   declarationSpecifiers initDeclaratorList?
+    :   declarationSpecifiers initDeclaratorList
     ;
 
 forExpression
@@ -486,12 +478,14 @@ forExpression
     ;
 
 jumpStatement
-    :   ('goto' Identifier
-    |   ('continue'| 'break')
-    |   'return' expression?
+    :   'goto' Identifier ';'
+    |   ('continue' | 'break') ';'
+    |   'return' expression? ';'
     |   'goto' unaryExpression // GCC extension
-    )
-    ';'
+    ;
+
+compilationUnit
+    :   translationUnit? EOF
     ;
 
 translationUnit

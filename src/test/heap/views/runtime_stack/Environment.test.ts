@@ -34,13 +34,13 @@ test('Storing and retrieving variables', () => {
     const stack = memory.stack;
 
     // Create declaration
-    const variable = new VariableDeclaration(get_int_type(), variable_name);
+    const variable = new VariableDeclaration(variable_name, get_int_type());
     // Enter scope with declaration
     stack.enter_block([variable]);
     expect(() => stack.get_variable(variable_name)).toThrow(VariableNotFoundError);
 
     // Declare variable
-    stack.declare_variable(variable_name);
+    stack.declare_variable(variable_name, memory);
     // Set variable
     const retrieved_value = stack.get_variable(variable_name);
     retrieved_value.set_value(memory, Int32.create_buffer(value_to_set));
@@ -51,7 +51,7 @@ test('Storing and retrieving variables', () => {
     expect(value_found).toBe(value_to_set);
 
     // Clear memory
-    stack.exit_scope();
+    stack.exit_scope(memory);
     expect(memory.middle_memory_free).toBe(maximum_space);
 });
 
@@ -59,23 +59,23 @@ test('Retrieving variables from parent scope', () => {
     const memory_size = 128;
     const maximum_space = memory_size - Stack.fixed_byte_length;
     const variable_name = "test_variable";
-    const value_to_set = 4;
+    const value_to_set = 5;
     // Initialise memory
     GlobalContext.initialise_instance(true);
     const memory = new CMemory(memory_size);
     const stack = memory.stack;
 
     // Create declaration
-    const variable = new VariableDeclaration(get_int_type(), variable_name);
+    const variable = new VariableDeclaration(variable_name, get_int_type());
     // Create scope with variable
     stack.enter_block([variable]);
-    stack.declare_variable(variable_name);
+    stack.declare_variable(variable_name, memory);
     stack.enter_call(get_base_return(), []);
     // Set value from child scope
     const retrieved_value = stack.get_variable(variable_name);
     retrieved_value.set_value(memory, Int32.create_buffer(value_to_set));
     // Exit scope
-    stack.exit_scope();
+    stack.exit_scope(memory);
 
     // Retrieve value from parent scope
     const second_variable = stack.get_variable(variable_name);
@@ -83,6 +83,6 @@ test('Retrieving variables from parent scope', () => {
     expect(value_found).toBe(value_to_set);
 
     // Clear memory
-    stack.exit_scope();
+    stack.exit_scope(memory);
     expect(memory.middle_memory_free).toBe(maximum_space);
 });

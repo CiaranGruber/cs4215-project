@@ -26,33 +26,67 @@ export default class TypeQualifier {
     constructor() {
     }
 
+    /**
+     * Modifies the data view to match the requirements of the type qualifier
+     */
     public convert_assign_view(assign_data: DataView): DataView {
         return assign_data;
     }
 
+    /**
+     * Whether the type qualifier allows dereferencing
+     */
     public can_deref(): boolean {
         return true;
     }
 
+    /**
+     * Whether the type qualifier is described as constant
+     */
     public is_const(): boolean {
         return false;
     }
 
+    /**
+     * Whether the type qualifier is described as volatile
+     */
     public is_volatile(): boolean {
         return false;
     }
 
+    /**
+     * Whether the type qualifier is described as restrict
+     */
     public is_restrict(): boolean {
         return false;
     }
 
+    /**
+     * Whether the type qualifier is described as atomic
+     */
     public is_atomic(): boolean {
         return false;
     }
 
+    /**
+     * Determines whether the type qualifier is equal to another
+     * @param other The other type qualifier to check
+     */
     public equals(other: TypeQualifier): boolean {
         return this.is_const() === other.is_const() && this.is_atomic() === other.is_atomic() &&
             this.is_restrict() === other.is_restrict() && this.is_volatile() === other.is_volatile();
+    }
+
+    /**
+     * Converts the type qualifier to a string
+     */
+    public to_string(): string {
+        let string = "";
+        if (this.is_const()) string += "const "
+        if (this.is_volatile()) string += "volatile "
+        if (this.is_restrict()) string += "restrict "
+        if (this.is_atomic()) string += "_Atomic "
+        return string.slice(0, string.length - 1);
     }
 }
 
@@ -92,6 +126,9 @@ export class InvalidQualifierError extends Error {
     }
 }
 
+/**
+ * Decorates a given type qualifier
+ */
 class QualifierDecorator extends TypeQualifier {
     private readonly internal_qualifier: TypeQualifier;
 

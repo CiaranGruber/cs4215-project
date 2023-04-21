@@ -128,6 +128,27 @@ export default class CallFrame implements MemoryHandler {
     }
 
     /**
+     * Gets a string representing the information about the call frame
+     */
+    public pretty_string(): string {
+        let string = "";
+        const divider = "---------------------\n";
+        string += "Type: Call Frame\n";
+        string += `Previous Frame Offset: ${this.prev_frame_offset}\n`;
+        string += `Frame Offset: ${this.byte_offset}\n`;
+        string += `Frame Size: ${this.byte_length}\n`;
+        string += `Return Type: ${this.return_type.to_string()}\n`;
+        string += divider;
+        string += "Environment\n";
+        string += this.environment.pretty_string();
+        string += "\n";
+        string += divider;
+        string += "Stash\n";
+        string += this.stash.pretty_string();
+        return string;
+    }
+
+    /**
      * Allocates a call frame in the given heap view
      * @param view The view used to change the heap values
      * @param prev_frame_addr The address to the previous frame

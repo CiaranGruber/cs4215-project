@@ -41,11 +41,30 @@ export default class CMemory implements MemoryHandler {
     }
 
     /**
-     * Gets the CMemory instance as a string
+     * Gets a string representing the bytes within the CMemory instance
      */
     public to_string(): string {
         // Basic print below - Can be improved to show information such as empty malloc space, etc
         return this.base_heap.to_string();
+    }
+
+    /**
+     * Gets a string representing the information about the memory
+     */
+    public pretty_string(): string {
+        // Pretty print with details
+        const divider = "-----------------------\n"
+        let memory_string = "";
+        memory_string += "C Memory\n";
+        memory_string += divider
+        memory_string += `Size: ${this.size}\n`;
+        memory_string += `Stack-free: ${this.stack_free}\n`;
+        memory_string += `Malloc-Free: ${this.malloc_free}\n`;
+        memory_string += `Middle-memory free: ${this.middle_memory_free}\n`;
+        memory_string += divider
+        memory_string += "Stack:\n"
+        memory_string += this.stack.pretty_string();
+        return memory_string
     }
 
     /**

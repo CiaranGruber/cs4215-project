@@ -33,4 +33,16 @@ export default class QualifiedPointer {
     public equals(other: QualifiedPointer): boolean {
         return this.type_qualifier.equals(other.type_qualifier);
     }
+
+    /**
+     * Converts the given qualified pointer to a string
+     */
+    public to_string(): string {
+        let string = "*";
+        const type_qual_string = this.type_qualifier.to_string();
+        if (type_qual_string.length > 0) {
+            string += " " + this.type_qualifier.to_string();
+        }
+        return string;
+    }
 }

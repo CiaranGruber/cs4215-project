@@ -7,7 +7,7 @@ import {UnknownDefinitionError} from "../../ExplicitControlListener";
  * Scans for the type qualifier and returns the type
  * @param ctx The context for the type qualifiers
  */
-export function scan_type_qualifier(ctx: TypeQualifierContext): TypeQualifierType {
+export default function scan_type_qualifier(ctx: TypeQualifierContext): TypeQualifierType {
     return ctx.accept(new TypeQualifierScanner());
 }
 

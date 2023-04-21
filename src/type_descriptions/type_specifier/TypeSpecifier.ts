@@ -68,6 +68,11 @@ export default abstract class TypeSpecifier {
     public equals(other: TypeSpecifier): boolean {
         return this.type === other.type;
     }
+
+    /**
+     * Gets the specifier as a string
+     */
+    public abstract to_string(): string;
 }
 
 export class FunctionTypeSpecifier extends TypeSpecifier {
@@ -99,11 +104,9 @@ export class FunctionTypeSpecifier extends TypeSpecifier {
      * @param function_manager The function manager used to get the relevant function
      */
     public call_function(key_buffer: DataView, args: Array<CValue>, memory: CMemory,
-                         function_manager: FunctionManager): CValue {
+                         function_manager: FunctionManager) {
         const key = new FunctionPointer(key_buffer).value;
-        const return_val = function_manager.get_function(key).run(memory, args);
-        return new CValue(false, this.return_type,
-            this.return_type.cast_data(return_val.type_information, return_val.get_value(memory)));
+        function_manager.get_function(key).run(memory, args);
     }
 
     public equals(other: TypeSpecifier): boolean {
@@ -111,6 +114,12 @@ export class FunctionTypeSpecifier extends TypeSpecifier {
             return false;
         }
         return this.return_type.equals((other as FunctionTypeSpecifier).return_type);
+    }
+
+    to_string(): string {
+        let string = "() => ";
+        string += this.return_type.to_string();
+        return string;
     }
 }
 
@@ -143,6 +152,10 @@ export class BuiltInTypeSpecifier extends TypeSpecifier {
         }
         return this.type_multiset === (other as BuiltInTypeSpecifier).type_multiset;
     }
+
+    public to_string(): string {
+        return this.type_multiset.to_string();
+    }
 }
 
 /**
@@ -173,6 +186,10 @@ export class BuiltInTypeSpecifierEnum extends TypeSpecifier {
             return false;
         }
         return this.type_name === (other as BuiltInTypeSpecifierEnum).type_name;
+    }
+
+    public to_string(): string {
+        return "(Built in type)";
     }
 }
 

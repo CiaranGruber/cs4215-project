@@ -27,6 +27,6 @@ export default class FunctionPointerConverter extends Converter<number> {
     }
 
     convert_to_js(value: CValue): number {
-        return new FunctionPointer(value.cast_to(this.type).get_value(undefined)).value;
+        return new FunctionPointer(value.cast_to(undefined, this.type).get_value(undefined)).value;
     }
 }

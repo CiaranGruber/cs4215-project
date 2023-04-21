@@ -40,6 +40,7 @@ export function get_built_in_type(built_in_specifiers: Array<BuiltInTypeSpecifie
 export default abstract class Converter<T> {
     /**
      * Converts the given CValue to a JavaScript value
+     * Todo: Change to require memory for casting purposes
      * @param value The value to convert
      */
     public abstract convert_to_js(value: CValue): T;

@@ -15,11 +15,26 @@ export default function parse_and_run(code: string | CharStream | FileStream): n
     const parsed_context = parse_input(code);
     const evaluator = new ExplicitControlEvaluator();
     evaluator.initialise(1024, parsed_context);
-    return evaluator.run();
+    return evaluator.run([]);
 }
 
 const value = parse_and_run(`
-int b = sizeof(int);
-int *d = &b;
-void print_test = print_int(d);`);
+int test(int, int a) {
+    print_int(a);
+}
+
+int main() {
+    test(3, 6);
+    int k = 1;
+    int j = 1;
+    int i = 2;
+    while (j) {
+        print_int(i);
+        if (!k) {
+            j = 0;
+        } else j = 1;
+        k = 0;
+    }
+    return 3;
+}`);
 console.log(value);

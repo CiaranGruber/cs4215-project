@@ -23,6 +23,6 @@ export default class BoolConverter extends Converter<boolean> {
     }
 
     convert_to_js(value: CValue): boolean {
-        return new Bool(value.cast_to(BoolConverter.type).get_value(undefined)).value;
+        return new Bool(value.cast_to(undefined, BoolConverter.type).get_value(undefined)).value;
     }
 }

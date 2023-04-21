@@ -23,6 +23,6 @@ export default class IntConverter extends Converter<number> {
     }
 
     convert_to_js(value: CValue): number {
-        return new Int32(value.cast_to(IntConverter.type).get_value(undefined)).value;
+        return new Int32(value.cast_to(undefined, IntConverter.type).get_value(undefined)).value;
     }
 }

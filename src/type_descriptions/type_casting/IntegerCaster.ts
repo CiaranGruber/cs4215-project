@@ -50,7 +50,7 @@ export default class IntegerCaster extends GenericTypeCaster {
                     throw new Error("Casting from a float is not implemented yet");
                 }
             }
-            const byte_offset = data.byteLength - src_data_size;
+            const byte_offset = data.byteOffset + data.byteLength - src_data_size; // Get right side of data
             return basic_padding_cast(this.data_size, new DataView(data.buffer, byte_offset, src_data_size));
         }
         throw new InvalidCastError("Failed to cast value to pointer");

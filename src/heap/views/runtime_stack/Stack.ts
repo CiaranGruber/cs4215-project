@@ -17,6 +17,7 @@ import Int32 from "../../../data_views/Int32";
 import Stash from "./Stash";
 import FrameHeader from "./FrameHeader";
 import CallFrame from "./CallFrame";
+import CMemory from "../../CMemory";
 
 /**
  * Represents a view of the C stack memory
@@ -42,7 +43,8 @@ export default class Stack implements MemoryHandler {
      * Gets the stash from the current frame
      */
     public get stash(): Stash {
-        const frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
+        const frame_offset = this.curr_frame_offset;
+        const frame = this.top_is_call_frame ? this.get_call_frame(frame_offset) : this.get_block_frame(frame_offset);
         if (frame === undefined) {
             throw new NothingOnStackError("No frames are currently on the stack (Therefore there is no stash)");
         }
@@ -79,21 +81,23 @@ export default class Stack implements MemoryHandler {
     /**
      * Declares a variable without setting the value
      * @param name The name of the variable to declare
+     * @param memory The memory used for C
      */
-    public declare_variable(name: string): void;
+    public declare_variable(name: string, memory: CMemory): void;
 
     /**
      * Declares the variable with the set value
      * @param name The name of the value
+     * @param memory The memory used for C
      * @param value The value to declare with
      */
-    public declare_variable(name: string, value: CValue): void;
+    public declare_variable(name: string, memory: CMemory, value: CValue): void;
 
-    public declare_variable(name: string, value?: CValue): void {
+    public declare_variable(name: string, memory: CMemory, value?: CValue): void {
         const curr_offset = this.curr_frame_offset;
-        const frame_size = BlockFrame.byte_length(this.data.subset(curr_offset, BlockFrame.fixed_byte_length));
-        const frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
-        frame.environment.declare_variable(name, value);
+        const is_call_frame = FrameHeader.is_call_frame(this.data.subset(curr_offset, FrameHeader.byte_length));
+        const frame = is_call_frame ? this.get_call_frame(curr_offset) : this.get_block_frame(curr_offset);
+        frame.environment.declare_variable(name, memory, value);
     }
 
     public get_variable(name: string): CValue {
@@ -101,14 +105,7 @@ export default class Stack implements MemoryHandler {
         // Search for variable starting at the top frame
         while (curr_offset !== -1) {
             const is_call_frame = FrameHeader.is_call_frame(this.data.subset(curr_offset, FrameHeader.byte_length));
-            let frame: CallFrame | BlockFrame;
-            if (is_call_frame) {
-                const frame_size = CallFrame.byte_length(this.data.subset(curr_offset, CallFrame.fixed_byte_length));
-                frame = CallFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
-            } else {
-                const frame_size = BlockFrame.byte_length(this.data.subset(curr_offset, BlockFrame.fixed_byte_length));
-                frame = BlockFrame.from_existing(this.data.subset(curr_offset, frame_size), this);
-            }
+            const frame = is_call_frame ? this.get_call_frame(curr_offset) : this.get_block_frame(curr_offset);
             const variable = frame.environment.get_variable(name);
             if (variable) {
                 return variable;
@@ -128,27 +125,61 @@ export default class Stack implements MemoryHandler {
     }
 
     /**
-     * Gets the top-most block frame from the stack
+     * Gets the block frame from the stack at the specified offset
      * @returns The top-most block frame, else undefined
      */
-    private get block_frame(): BlockFrame {
+    private get_block_frame(offset: number): BlockFrame {
         if (this.is_empty) {
             return undefined;
         }
-        const frame_offset = this.curr_frame_offset;
-        const frame_length = BlockFrame.byte_length(this.data.subset(frame_offset, BlockFrame.fixed_byte_length));
+        const frame_length = BlockFrame.byte_length(this.data.subset(offset, BlockFrame.fixed_byte_length));
 
-        return BlockFrame.from_existing(this.data.subset(frame_offset, frame_length), this);
+        return BlockFrame.from_existing(this.data.subset(offset, frame_length), this);
     }
 
-    private get call_frame(): CallFrame {
+    /**
+     * Gets the call frame from the stack at the specified offset
+     * @returns The top-most call frame, else undefined
+     */
+    private get_call_frame(offset: number): CallFrame {
         if (this.is_empty) {
             return undefined;
         }
-        const frame_offset = this.curr_frame_offset;
-        const frame_length = CallFrame.byte_length(this.data.subset(frame_offset, CallFrame.fixed_byte_length));
+        const frame_length = CallFrame.byte_length(this.data.subset(offset, CallFrame.fixed_byte_length));
 
-        return CallFrame.from_existing(this.data.subset(frame_offset, frame_length), this);
+        return CallFrame.from_existing(this.data.subset(offset, frame_length), this);
+    }
+
+    /**
+     * Gets a string representing the information about the stack
+     */
+    public pretty_string(): string {
+        let string = "";
+        const divider = "=============================\n";
+        // Get the frames
+        const frames: Array<CallFrame | BlockFrame> = [];
+        let curr_offset = this.curr_frame_offset;
+        // Search for variable starting at the top frame
+        while (curr_offset !== -1) {
+            const is_call_frame = FrameHeader.is_call_frame(this.data.subset(curr_offset, FrameHeader.byte_length));
+            const frame = is_call_frame ? this.get_call_frame(curr_offset) : this.get_block_frame(curr_offset);
+            frames.push(frame);
+            // If it is a function call, get the variable from the global environment
+            curr_offset = frame.prev_frame_offset;
+        }
+        // Prints the string
+        string += `Frames: ${frames.length}\n`;
+        string += `Offset: ${this.data.byte_offset}\n`;
+        string += `Size: ${this.data.byte_length}\n`;
+        let i = 1;
+        while (frames.length > 0) {
+            const frame = frames.pop();
+            string += divider;
+            string += `Frame ${i++}\n`
+            string += frame.pretty_string();
+            string += "\n";
+        }
+        return string;
     }
 
     /**
@@ -206,13 +237,14 @@ export default class Stack implements MemoryHandler {
      * Exits a scope by deallocating the remaining frame and if it is a function, returning the last value on the stash
      * or void
      */
-    public exit_scope() {
+    public exit_scope(memory: CMemory) {
         // Get the current frame
-        const is_call_frame = this.top_is_call_frame;
+        let is_call_frame = this.top_is_call_frame;
         if (is_call_frame === undefined) {
             throw new NothingOnStackError("Cannot exit scope when there is not block frame currently present");
         }
-        const frame = is_call_frame ? this.call_frame : this.block_frame;
+        const frame_offset = this.curr_frame_offset;
+        const frame = is_call_frame ? this.get_call_frame(frame_offset) : this.get_block_frame(frame_offset);
         // Get return value to push onto stash if possible
         let return_value: CValue;
         if (is_call_frame) {
@@ -221,7 +253,7 @@ export default class Stack implements MemoryHandler {
                 return_value = new CValue(false, return_type, return_type.default_value());
             } else {
                 return_value = frame.stash.pop();
-                return_value = return_value.cast_to(return_type);
+                return_value = return_value.cast_to(memory, return_type);
             }
         }
 
@@ -233,7 +265,8 @@ export default class Stack implements MemoryHandler {
 
         // Push onto stash of previous frame
         if (is_call_frame) {
-            const top_frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
+            const frame_offset = this.curr_frame_offset;
+            const top_frame = this.top_is_call_frame ? this.get_call_frame(frame_offset) : this.get_block_frame(frame_offset);
             if (top_frame) {
                 top_frame.stash.push(return_value);
             }
@@ -256,7 +289,8 @@ export default class Stack implements MemoryHandler {
 
         // Check stash size limitations
         const is_call_frame = this.top_is_call_frame;
-        const frame = is_call_frame ? this.call_frame : this.block_frame;
+        const frame_offset = this.curr_frame_offset;
+        const frame = is_call_frame ? this.get_call_frame(frame_offset) : this.get_block_frame(frame_offset);
         const frame_size = frame.byte_length;
         const minimum_size = is_call_frame ? CallFrame.fixed_byte_length : BlockFrame.fixed_byte_length
         if (frame_size - memory_reduction < minimum_size) {
@@ -275,7 +309,8 @@ export default class Stack implements MemoryHandler {
 
         // Adjust memory
         this.data = this.memory_handler.request_memory(additional_memory_required, MemoryCaller.STACK);
-        const frame = this.top_is_call_frame ? this.call_frame : this.block_frame;
+        const frame_offset = this.curr_frame_offset;
+        const frame = this.top_is_call_frame ? this.get_call_frame(frame_offset) : this.get_block_frame(frame_offset);
         return this.data.subset(this.curr_frame_offset,frame.byte_length + additional_memory_required);
     }
 }
